@@ -36,8 +36,131 @@ ebr_volume_id:	db 0x12, 0x34, 0x56, 0x78 ; Serial number.
 ebr_volume_label:	db 'APIOFIRMCRX'				; Label, 11 bytes.
 ebr_system_id:	db 'FAT12   '							; System ID, 11 bytes.
 
-entry:	
-	jmp main 											; Jump to main, unconditionally.
+entry:
+	mov ax, 0 										; Cannot set ds or es via direct addressing.
+	mov ds, ax
+	mov es, ax
+
+	mov ss, ax
+	mov sp, 0x7C00 								; Stack pointer starts at 0x7C00
+
+	push es 											; Assert this is 0x7C00
+	push word .after
+	retf
+
+	.after:
+	mov [ebr_drive_number], dl 		; Read from disk.
+
+	mov si, message 							; Show boot code message.
+	call strput
+
+	push es 											; Read drive parameters.
+	mov ah, 0x08
+	int 0x13
+	jc disk_error
+	pop es
+
+	and cl, 0x3F 									; Remove upper 2 bits.
+	xor ch, ch
+	mov [disk_sectors_ptrack], cx ; Sector count.
+
+	inc dh
+	mov [disk_heads], dh 					; Head count/
+
+	mov ax, [disk_sectors_pfile_allocation_table] ; Calculate LBA of root.
+	mov bl, [disk_file_allocation_table_count]
+	xor bh, bh
+	mul bx
+	add ax, [disk_rsvp_sectors]
+	push ax
+
+	mov ax, [disk_directory_entries_count] ; Calculate size of root.
+	shl ax, 5
+	xor dx, dx
+	div word [disk_bytes_psector] ; Number of sectors to read.
+
+	test dx, dx
+	jz .root_directory_after
+	inc ax
+
+	.root_directory_after:
+	mov cl, al
+	pop ax
+	mov dl, [ebr_drive_number] 		; dl = drive number
+	mov bx, buffer 								; es:bx = buffer
+	call diskread
+
+	xor bx, bx 										; Find system.k
+	mov di, buffer
+
+	.search_kernel:
+	mov si, kernel_location
+	mov cx, 11 										; FAT12 filenames are 11 characters.
+	push di
+	repe cmpsb
+	pop di
+	je .found_kernel
+
+	add di, 32
+	inc bx
+	cmp bx, [disk_directory_entries_count]
+	jl .search_kernel
+
+	jmp no_kernel 								; system.k not found.
+
+	.found_kernel:
+	mov ax, [di + 26] 						; di has address to entry, first logical cluster field.
+	mov [kernel_cluster], ax
+
+	mov ax, [disk_rsvp_sectors] 	; Load FAT from disk to memory.
+	mov bx, buffer
+	mov cl, [disk_sectors_pfile_allocation_table]
+	mov dl, [ebr_drive_number]
+	call diskread
+
+	mov bx, KERNEL_LOAD 					; Read kernel.
+	mov es, bx
+	mov bx, KERNEL_OFFSET
+
+	.load_kernel:
+	mov ax, [kernel_cluster] 			; Read next cluster.
+	add ax, 31
+
+	mov cl, 1
+	mov dl, [ebr_drive_number]
+	call diskread
+
+	add bx, [disk_bytes_psector]
+
+	mov ax, [kernel_cluster] 			; Calculate location of next cluster..
+	mov cx, 3
+	mul cx
+	mov cx, 2
+	div cx
+
+	mov si, buffer
+	add si, ax
+	mov ax, [ds:si] 							; Read entry from FAT at index ax.
+
+	or dx, dx
+	jz .even
+
+	.not_even:
+	shr ax, 4
+	jmp .next_cluster_after
+	.even:
+	and ax, 0x0FFF
+
+	.next_cluster_after:
+	mov dl, [ebr_drive_number] 		; Boot device in dl.
+
+	mov ax, KERNEL_LOAD 					; Setup segment registers.
+	mov ds, ax
+	mov es, ax
+
+	jmp KERNEL_LOAD:KERNEL_OFFSET
+	jmp bootpanic 								; Should not occur. (DO NOT RESEARCH)
+	jmp exitboot
 
 ;;; STRPUT
 ;;; Outputs a string to BIOS TTY.
@@ -64,34 +187,18 @@ strput:
 	pop si
 	ret
 
-;;; MAIN
-;;; Main entrypoint function. Does not return.
-
-main:
-	mov ax, 0 										; ds and es cannot be altered using direct addressing, set ax to 0, then ds and ex to ax.
-	mov ds, ax 										; Data segment.
-	mov es, ax 										; Extra data segment.
-
-	mov ss, ax 										; Stack setup.
-	mov sp, 0x7C00 								; Origin is 0x7C00, so start stack pointing from there.
-
-	mov [ebr_drive_number], dl 		; DL = drive number, as set by BIOS.
-
-	mov ax, 1 										; LBA = 1
-	mov cl, 1 										; Read 1 sector.
-	mov bx, 0x7E00 								; Data exists after boot code.
-	call diskread 								; Read the disk.
-
-	mov si, message 							; Setup for strput.
-	call strput
-
-	jmp exitboot
-
 ;;; DISK ERROR
 ;;; When the disk has an error.
 
 disk_error:
 	mov si, disk_read_error_message ; Setup for strput
+	call strput
+	jmp bootpanic
+
+;;; NO KERNEL
+;;; When the kernel cannot be found.
+no_kernel:
+	mov si, no_kernel_message
 	call strput
 	jmp bootpanic
 
@@ -200,10 +307,17 @@ diskreset:
 	ret
 
 ;;; variables
-message:	db 'Bzzzzzzzzzt.', STRD
-disk_read_error_message:	db 'ERR: Could not read disk. Stop.', STRD
-bootpanic_message:	db 'A fatal error was encountered during boot.', DOSN, 'Press any key to reboot...', 0
+message:	db '[CRXBOOT]', STRD
+disk_read_error_message:	db 'ERR: DISK. Stop.', STRD
+no_kernel_message:	db 'ERR: No kernel. Stop.', STRD
+kernel_location:	db 'SYSTEM  K  '
+kernel_cluster:	dw 0
+bootpanic_message:	db 'Boot ERR.', STRD
+
+	KERNEL_LOAD equ 0x2000
+	KERNEL_OFFSET equ 0
 
 ;;; Boot sector magic.
 	times 510-($-$$) db 0 				; Pad binary with null until 510th byte.
 	dw 0xAA55 										; Boot sector magic number.
+buffer:

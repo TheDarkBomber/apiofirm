@@ -2,7 +2,7 @@
 ;;; APIOFIRM OPERATING SYSTEM: KERNEL
 ;;;
 
-org 0x7C00 											; set origin to 0x7C00
+org 0x0 											; set origin to 0x0
 bits 16													; explicitly produce 16-bit binary files
 
 %define DOSN 0x0D, 0x0A 				; BIOS TTY mode uses DOS newlines
@@ -39,22 +39,13 @@ strput:
 ;;; Main entrypoint function. Does not return.
 
 main:
-	mov ax, 0 										; ds and es cannot be altered using direct addressing, set ax to 0, then ds and ex to ax.
-	mov ds, ax 										; Data segment.
-	mov es, ax 										; Extra data segment.
-
-	mov ss, ax 										; Stack setup.
-	mov sp, 0x7C00 								; Origin is 0x7C00, so start stack pointing from there.
-
-	mov si, message 							; Setup for strput.
+	mov si, k_message 							; Setup for strput.
 	call strput
 
+stop_sys:
+	cli
 	hlt 													; No more execution is to be done.
 	jmp $ 												; In case CPU restored from halt, become stagnant forever.
 
 ;;; variable
-message:	db 'Bzzzzzzzzzt.', STRD
-
-;;; Boot sector magic.
-	times 510-($-$$) db 0 				; Pad binary with null until 510th byte.
-	dw 0xAA55 										; Boot sector magic number.
+k_message:	db 'Bzzzzzzzzzt.', DOSN, 'Welcome to kernelspace.', STRD
