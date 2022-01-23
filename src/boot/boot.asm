@@ -12,7 +12,7 @@ bits 16													; explicitly produce 16-bit binary files
 ;;; FAT12 HEADER
 ;;;
 
-jmp short entry
+jmp short startpoint
 nop
 
 disk_oem:	db 'CRXBOOT1' 				; OEM, 8 bytes.
@@ -36,7 +36,7 @@ ebr_volume_id:	db 0x12, 0x34, 0x56, 0x78 ; Serial number.
 ebr_volume_label:	db 'APIOFIRMCRX'				; Label, 11 bytes.
 ebr_system_id:	db 'FAT12   '							; System ID, 11 bytes.
 
-entry:
+startpoint:
 	mov ax, 0 										; Cannot set ds or es via direct addressing.
 	mov ds, ax
 	mov es, ax
@@ -65,7 +65,7 @@ entry:
 	mov [disk_sectors_ptrack], cx ; Sector count.
 
 	inc dh
-	mov [disk_heads], dh 					; Head count/
+	mov [disk_heads], dh 					; Head count.
 
 	mov ax, [disk_sectors_pfile_allocation_table] ; Calculate LBA of root.
 	mov bl, [disk_file_allocation_table_count]
@@ -90,27 +90,27 @@ entry:
 	mov bx, buffer 								; es:bx = buffer
 	call diskread
 
-	xor bx, bx 										; Find system.k
+	xor bx, bx 										; Find crxboot.kb
 	mov di, buffer
 
-	.search_kernel:
-	mov si, kernel_location
+	.search_crxboot:
+	mov si, crxboot_location
 	mov cx, 11 										; FAT12 filenames are 11 characters.
 	push di
 	repe cmpsb
 	pop di
-	je .found_kernel
+	je .found_crxboot
 
 	add di, 32
 	inc bx
 	cmp bx, [disk_directory_entries_count]
-	jl .search_kernel
+	jl .search_crxboot
 
-	jmp no_kernel 								; system.k not found.
+	jmp no_crxboot 								; crxboot.kb not found.
 
-	.found_kernel:
+	.found_crxboot:
 	mov ax, [di + 26] 						; di has address to entry, first logical cluster field.
-	mov [kernel_cluster], ax
+	mov [crxboot_cluster], ax
 
 	mov ax, [disk_rsvp_sectors] 	; Load FAT from disk to memory.
 	mov bx, buffer
@@ -118,12 +118,12 @@ entry:
 	mov dl, [ebr_drive_number]
 	call diskread
 
-	mov bx, KERNEL_LOAD 					; Read kernel.
+	mov bx, CRXBOOT_LOAD 					; Read crxboot.
 	mov es, bx
-	mov bx, KERNEL_OFFSET
+	mov bx, CRXBOOT_OFFSET
 
-	.load_kernel:
-	mov ax, [kernel_cluster] 			; Read next cluster.
+	.load_crxboot:
+	mov ax, [crxboot_cluster] 			; Read next cluster.
 	add ax, 31
 
 	mov cl, 1
@@ -132,7 +132,7 @@ entry:
 
 	add bx, [disk_bytes_psector]
 
-	mov ax, [kernel_cluster] 			; Calculate location of next cluster..
+	mov ax, [crxboot_cluster] 			; Calculate location of next cluster..
 	mov cx, 3
 	mul cx
 	mov cx, 2
@@ -152,13 +152,20 @@ entry:
 	and ax, 0x0FFF
 
 	.next_cluster_after:
+	cmp ax, 0x0FF8
+	jae .read_finish
+
+	mov [crxboot_cluster], ax
+	jmp .load_crxboot
+
+	.read_finish:
 	mov dl, [ebr_drive_number] 		; Boot device in dl.
 
-	mov ax, KERNEL_LOAD 					; Setup segment registers.
+	mov ax, CRXBOOT_LOAD 					; Setup segment registers.
 	mov ds, ax
 	mov es, ax
 
-	jmp KERNEL_LOAD:KERNEL_OFFSET
+	jmp CRXBOOT_LOAD:CRXBOOT_OFFSET
 	jmp bootpanic 								; Should not occur. (DO NOT RESEARCH)
 	jmp exitboot
 
@@ -195,10 +202,10 @@ disk_error:
 	call strput
 	jmp bootpanic
 
-;;; NO KERNEL
-;;; When the kernel cannot be found.
-no_kernel:
-	mov si, no_kernel_message
+;;; NO CRXBOOT
+;;; When the crxboot cannot be found.
+no_crxboot:
+	mov si, no_crxboot_message
 	call strput
 	jmp bootpanic
 
@@ -307,15 +314,15 @@ diskreset:
 	ret
 
 ;;; variables
-message:	db '[CRXBOOT]', STRD
-disk_read_error_message:	db 'ERR: DISK. Stop.', STRD
-no_kernel_message:	db 'ERR: No kernel. Stop.', STRD
-kernel_location:	db 'SYSTEM  K  '
-kernel_cluster:	dw 0
-bootpanic_message:	db 'Boot ERR.', STRD
+message:	db 'bzzzzt c:', STRD
+disk_read_error_message:	db 'E: DISK. Stop.', STRD
+no_crxboot_message:	db 'E: No CRXBOOT. Stop.', STRD
+crxboot_location:	db 'CRXBOOT KB '
+crxboot_cluster:	dw 0
+bootpanic_message:	db 'ERR!', STRD
 
-	KERNEL_LOAD equ 0x2000
-	KERNEL_OFFSET equ 0
+	CRXBOOT_LOAD equ 0x2000
+	CRXBOOT_OFFSET equ 0
 
 ;;; Boot sector magic.
 	times 510-($-$$) db 0 				; Pad binary with null until 510th byte.
