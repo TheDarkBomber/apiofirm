@@ -148,7 +148,8 @@ void _cdecl print(const char* format, ...) {
 	}
 }
 
-const char HEXADECIMAL_CHARACTERS[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const char HEXADECIMAL_CHARACTERS[] = "0123456789ABCDEF";
+const char NIFTIMAL_CHARACTERS[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 int* imprint(int* argp, int length, bool sign, int radix) {
 	char buffer[32];
@@ -199,11 +200,21 @@ int* imprint(int* argp, int length, bool sign, int radix) {
 	do {
 		uint32_t remainder;
 		x86Divide64By32(number, radix, &number, &remainder);
-		buffer[position++] = HEXADECIMAL_CHARACTERS[remainder];
+		buffer[position++] = NIFTIMAL_CHARACTERS[remainder];
 	} while (number > 0);
 
 	if (sign && signOfNumber < 0) buffer[position++] = '-';
 
 	while (--position >= 0) charput(buffer[position]);
 	return argp;
+}
+
+void bufferprint(const char *message, const void far *buffer, uint16_t count) {
+	const uint8_t far* unsigned8buffer = (const uint8_t far*)buffer;
+	strput(message);
+	for (uint16_t i = 0; i < count; i++) {
+		charput(HEXADECIMAL_CHARACTERS[unsigned8buffer[i] >> 4]);
+		charput(HEXADECIMAL_CHARACTERS[unsigned8buffer[i] & 0xF]);
+	}
+	strput("\r\n");
 }

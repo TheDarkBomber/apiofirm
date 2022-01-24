@@ -3,7 +3,7 @@ ASSEMBLER?=nasm
 ASSEMBLER_FLAGS?=-f obj
 WATCOM?=/usr/bin/watcom
 CC16?=$(WATCOM)/binl/wcc
-CCFLAGS16?=-4 -d3 -s -wx -ms -zl
+CCFLAGS16?=-4 -d3 -s -wx -ms -zl -za99
 LD16?=$(WATCOM)/binl/wlink
 
 C_SOURCES=$(wildcard *.c)
