@@ -6,7 +6,8 @@
 
 const unsigned SCREEN_WIDTH = 80;
 const unsigned SCREEN_HEIGHT = 25;
-const uint8_t DEFAULT_COLOUR = 0x7;
+
+uint8_t DefaultColour = VGA_YELLOW;
 
 uint8_t *ScreenBuffer = (uint8_t *)0xB8000;
 int ScreenX = 0, ScreenY = 0;
@@ -34,7 +35,7 @@ void clearscreen() {
 	for (int y = 0; y < SCREEN_HEIGHT; y++) {
 		for (int x = 0; x < SCREEN_WIDTH; x++) {
 			charset(x, y, '\0');
-			colourset(x, y, DEFAULT_COLOUR);
+			colourset(x, y, DefaultColour);
 		}
 	}
 
@@ -54,7 +55,7 @@ void scroll(int lines) {
 	for (int y = SCREEN_HEIGHT - lines; y < SCREEN_HEIGHT; y++) {
 		for (int x = 0; x < SCREEN_WIDTH; x++) {
 			charset(x, y, '\0');
-			colourset(x, y, DEFAULT_COLOUR);
+			colourset(x, y, DefaultColour);
 		}
 	}
 
@@ -77,6 +78,7 @@ void charput(char c) {
 
 	default:
 		charset(ScreenX, ScreenY, c);
+		colourset(ScreenX, ScreenY, DefaultColour);
 		ScreenX++;
 		break;
 	}
@@ -289,4 +291,14 @@ void bufferprint(const char *message, const void *buffer, uint16_t count) {
 		charput(HEXADECIMAL_CHARACTERS[unsigned8buffer[i] & 0xF]);
 	}
 	strput("\r\n");
+}
+
+void setprintPosition(int x, int y) {
+	ScreenX = x;
+	ScreenY = y;
+	cursorset(x, y);
+}
+
+void setDefaultColour(uint8_t colour) {
+	DefaultColour = colour;
 }

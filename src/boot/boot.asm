@@ -321,8 +321,8 @@ crxboot_location:	db 'CRXBOOT KB '
 crxboot_cluster:	dw 0
 bootpanic_message:	db 'ERR!', STRD
 
-	CRXBOOT_LOAD equ 0x2000
-	CRXBOOT_OFFSET equ 0
+CRXBOOT_LOAD equ 0x0
+CRXBOOT_OFFSET equ 0x500
 
 ;;; Boot sector magic.
 	times 510-($-$$) db 0 				; Pad binary with null until 510th byte.

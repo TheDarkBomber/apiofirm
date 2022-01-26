@@ -1,10 +1,6 @@
 BUILD?=build/
 ASSEMBLER?=nasm
 ASSEMBLER_FLAGS?=-f elf
-WATCOM?=/usr/bin/watcom
-CC16?=$(WATCOM)/binl/wcc
-CCFLAGS16?=-4 -d3 -s -wx -ms -zl -za99
-LD16?=$(WATCOM)/binl/wlink
 
 CC=i686-elf-gcc
 CCFLAGS=-std=c99 -ffreestanding -nostdlib
@@ -16,31 +12,31 @@ C_SOURCES=$(wildcard *.c)
 ASM_SOURCES=$(wildcard *.asm)
 C_OBJECTS=$(patsubst %.c, $(OBJ_LOCATION)/%.o, $(C_SOURCES))
 ASM_OBJECTS=$(patsubst %.asm, $(OBJ_LOCATION)/%.x86, $(ASM_SOURCES))
-OBJ_LOCATION=$(BUILD)/boot/crxboot
+OBJ_LOCATION=$(BUILD)/kernel
 
-.PHONY: all crxboot clean always
-all: crxboot
+.PHONY: all kernel clean always
+all: kernel
 
-crxboot: $(BUILD)/crxboot.kb
+kernel: $(BUILD)/system.k
 
-$(BUILD)/crxboot.kb: $(ASM_OBJECTS) $(C_OBJECTS)
-	$(LD) $(LDFLAGS) -Wl,-Map=$(BUILD)/crxboot.map -o $@ $^ $(CCLIBRARIES)
-	@echo "[CRXBOOT] COMPILED crxboot.kb"
+$(BUILD)/system.k: $(ASM_OBJECTS) $(C_OBJECTS)
+	$(LD) $(LDFLAGS) -Wl,-Map=$(BUILD)/kernel.map -o $@ $^ $(CCLIBRARIES)
+	@echo "[KERNEL] COMPILED system.k"
 
 $(OBJ_LOCATION)/%.o: %.c always
 	mkdir -pv $(@D)
 	$(CC) $(CCFLAGS) -c -o $@ $<
-	@echo "[CRXBOOT] COMPILED " $<
+	@echo "[KERNEL] COMPILED " $<
 
 $(OBJ_LOCATION)/%.x86: %.asm always
 	mkdir -pv $(@D)
 	$(ASSEMBLER) $(ASSEMBLER_FLAGS) -o $@ $<
-	@echo "[CRXBOOT] COMPILED " $<
+	@echo "[KERNEL] COMPILED " $<
 
 always:
 	mkdir -pv $(OBJ_LOCATION)
 
 clean:
-	rm -fv $(BUILD)/crxboot.kb
-	rm -fv $(BUILD)/crxboot.map
+	rm -fv $(BUILD)/system.k
+	rm -fv $(BUILD)/kernel.map
 	rm -fv $(OBJ_LOCATION)/*

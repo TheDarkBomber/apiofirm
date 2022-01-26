@@ -3,7 +3,6 @@
 #include "stdint.h"
 #include "disk.h"
 
-#pragma pack(push, 1)
 typedef struct {
 	uint8_t Name[11];
 	uint8_t Attributes;
@@ -17,8 +16,7 @@ typedef struct {
 	uint16_t ModifiedDate;
 	uint16_t FirstClusterLow;
 	uint32_t Size;
-} FATDirectoryEntry;
-#pragma pack(pop)
+} __attribute__((packed)) FATDirectoryEntry;
 
 typedef struct {
 	int Handle;
@@ -38,11 +36,9 @@ enum FATAttributes {
 };
 
 bool InitialiseFAT(DISK *disk);
-FATFile far *FATOpen(DISK *disk, const char *path);
-uint32_t FATRead(DISK *disk, FATFile far *file, uint32_t byteCount,
-                 void *outputData);
-bool FATReadEntry(DISK *disk, FATFile far *file,
-                  FATDirectoryEntry *directoryEntry);
-void FATAntiopen(FATFile far* file);
+FATFile* FATOpen(DISK *disk, const char *path);
+uint32_t FATRead(DISK *disk, FATFile *file, uint32_t byteCount, void *outputData);
+bool FATReadEntry(DISK *disk, FATFile *file, FATDirectoryEntry *directoryEntry);
+void FATAntiopen(FATFile* file);
 
 #endif

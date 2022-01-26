@@ -1,12 +1,20 @@
-#include "stdint.h"
 #include "stdio.h"
+#include "x86.h"
 #include "disk.h"
 #include "fsfat.h"
+#include "memdefs.h"
+#include "memory.h"
+#include <stdint.h>
 
-void far *Data = (void far *)0x00500200;
+uint8_t* KERNEL_LOAD_BUFFER = (uint8_t *)MEMORY_LOAD_KERNEL;
+uint8_t* Bee = (uint8_t*)MEMORY_KERNEL_ADDRESS;
 
-void _cdecl cstart_(uint16_t bootLocation) {
-	strput("[CRXBOOT] Loaded second stage bootloader. Bzzzzzt.\r\n");
+typedef void (*BeeFlight)();
+
+void __attribute__((cdecl)) cstart_(uint16_t bootLocation) {
+	print("[CRXBOOT] Loaded second stage bootloader. Bzzzzzt.\r\n");
+
+	clearscreen();
 	print("[CRXBOOT] CRXBOOT located on drive %d\r\n", bootLocation);
 
 	DISK disk;
@@ -15,51 +23,26 @@ void _cdecl cstart_(uint16_t bootLocation) {
 		goto crxboot_ends;
 	}
 
-	ReadDiskSectors(&disk, 19, 1, Data);
-
 	if (!InitialiseFAT(&disk)) {
 		print("[CRXBOOT] Fatal error: Could not initialise FAT.\r\n");
 		goto crxboot_ends;
 	}
+
 	print("[CRXBOOT] 0x%x = 0o%o = %d !\r\n", 0x0BEE, 0x0BEE, 0x0BEE);
 	print("[CRXBOOT] In base 6, 0x%x = %a\r\n", 0x0BEE, 0x0BEE);
 	print("[CRXBOOT] In niftimal, that's %A\r\n", 0x0BEE);
 
-	print("[CRXBOOT] Directory listing of first five files for /\r\n");
-	FATFile far* fileData = FATOpen(&disk, "/");
-	FATDirectoryEntry entry;
-
-	int i = 0;
-	FATReadEntry(&disk, fileData, &entry);
-	while (FATReadEntry(&disk, fileData, &entry) && i++ < 5) {
-		print("disk%d:/", bootLocation);
-		for (int i = 0; i < 11; i++) charput(entry.Name[i]);
-		strput("\r\n");
-	}
-	FATAntiopen(fileData);
-
-	print("[CRXBOOT] Directory listing of first three files for /BEES\r\n");
-	fileData = FATOpen(&disk, "/bees");
-	i = 0;
-	while (FATReadEntry(&disk, fileData, &entry) && i++ < 3) {
-		print("disk%d:/BEES/", bootLocation);
-		for (int i = 0; i < 11; i++) charput(entry.Name[i]);
-		strput("\r\n");
-	}
-	FATAntiopen(fileData);
-
-	char buffer[100];
+	FATFile* fileData = FATOpen(&disk, "/system.k  ");
 	uint32_t read;
-
-	print("[CRXBOOT] Performing standard read of /BEES/APIOFORM.BEE\r\n");
-	fileData = FATOpen(&disk, "bees/apioform.bee");
-	while ((read = FATRead(&disk, fileData, sizeof(buffer), buffer))) {
-		for (uint32_t i = 0; i < read; i++) {
-			if (buffer[i] == '\n') charput('\r');
-			charput(buffer[i]);
-		}
+	uint8_t* beeBuffer = Bee;
+	while ((read = FATRead(&disk, fileData, MEMORY_LOAD_SIZE, KERNEL_LOAD_BUFFER))) {
+		memcpy(beeBuffer, KERNEL_LOAD_BUFFER, read);
+		beeBuffer += read;
 	}
 	FATAntiopen(fileData);
+
+	BeeFlight waggleDance = (BeeFlight)Bee;
+	waggleDance();
 
  crxboot_ends:
 	for (;;);

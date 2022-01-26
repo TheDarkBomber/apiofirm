@@ -1,132 +1,159 @@
-bits 16
+%macro x86EnterRealMode 0
+	[bits 32]
+	jmp word 0x18:.ProtectedModeB16
 
-section _TEXT class=CODE
+	.ProtectedModeB16:
+	[bits 16]
 
-;;; void _cdecl x86Divide64By32(uint64_t numerator, uint32_t denominator, uint64_t* outputQuotient, uint32_t* outputRemainder);
+	mov eax, cr0 									; Disable protected mode flag.
+	and al, ~1
+	mov cr0, eax
 
-global _x86Divide64By32
-_x86Divide64By32:
-	push bp 											; Save old call frame.
-	mov bp, sp 										; Initialise new call frame.
+	jmp word 0x00:.RealMode
 
-	push bx
+	.RealMode:
+	mov ax, 0 										; Setup segment registers.
+	mov ds, ax
+	mov ss, ax
 
-	mov eax, [bp + 8] 						; eax = upper 32 bits of numerator.
-	mov ecx, [bp + 12] 						; ecx = denominator.
-	xor edx, edx
-	div ecx 											; eax - quotient, edx - remainder
+	sti 													; Enable BIOS interrupts.
+%endmacro
 
-	mov bx, [bp + 16] 						; Store upper 32 bits of quotient.
-	mov [bx + 4], eax
+%macro x86EnterProtectedMode 0
+	cli 													; Disable BIOS interrupts.
 
-	mov eax, [bp + 4] 						; eax = lower 32 bits of numerator.
-	div ecx 											; edx = old remainder.
+	mov eax, cr0 									; Enable protected mode flag.
+	or al, 1
+	mov cr0, eax
 
-	mov [bx], eax 								; Store the result.
-	mov bx, [bp + 18]
-	mov [bx], edx
+	jmp dword 0x08:.ProtectedMode
 
-	pop bx
+	.ProtectedMode:
+	[bits 32]
 
-	mov sp, bp 										; Antisave old call frame.
-	pop bp
+	mov ax, 0x10 									; Setup segment registers.
+	mov ds, ax
+	mov ss, ax
+%endmacro
+
+;;; CONVERT LINEAR ADDRESS TO SEGMENT OFFSET ADDRESS
+;;; %1 = Linear address.
+;;; %2 = Output target segment register.
+;;; %3 = Target 32-bit register.
+;;; %4 = Target lower half of %3.
+
+%macro ConvertLinearAddressToSegmentOffsetAddress 4
+	mov %3, %1
+	shr %3, 4
+	mov %2, %4
+	mov %3, %1
+	and %3, 0xF
+%endmacro
+
+global x86Input
+x86Input:
+	[bits 32]
+	mov dx, [esp + 4]
+	xor eax, eax
+	in al, dx
 	ret
 
-;;; void _cdecl x86TeletypeModeWriteCharacter(char c, uint8_t page);
-
-global _x86TeletypeModeWriteCharacter
-_x86TeletypeModeWriteCharacter:
-	push bp 											; Save old call frame.
-	mov bp, sp 										; Initialise new call frame.
-
-	push bx 											; Save bx.
-
-	mov ah, 0x0E 									; Set TTY mode.
-	mov al, [bp + 4] 							; Set character.
-	mov bh, [bp + 6] 							; Set page.
-
-	int 0x10
-
-	pop bx 												; Antisave bx.
-
-	mov sp, bp 										; Antisave old call frame.
-	pop bp
+global x86Output
+x86Output:
+	[bits 32]
+	mov dx, [esp + 4]
+	mov al, [esp + 8]
+	out dx, al
 	ret
 
 ;;; bool _cdecl x86DiskReset(uint8_t disk);
 
-global _x86DiskReset
-_x86DiskReset:
-	push bp 											; Save old call frame.
-	mov bp, sp 										; Initialise new call frame.
+global x86DiskReset
+x86DiskReset:
+	[bits 32]
+	push ebp 											; Save old call frame.
+	mov ebp, esp 										; Initialise new call frame.
 
+	x86EnterRealMode
 	mov ah, 0
-	mov dl, [bp + 4] 							; dl stores the disk number.
+	mov dl, [bp + 8] 							; dl stores the disk number.
 	stc
 	int 0x13
 
-	mov ax, 1
-	sbb ax, 0 										; Success = 1.
+	mov eax, 1
+	sbb eax, 0 										; Success = 1.
 
-	mov sp, bp 										; Antisave old call frame.
-	pop bp
+	push eax
+	x86EnterProtectedMode
+
+	pop eax
+
+	mov esp, ebp 										; Antisave old call frame.
+	pop ebp
 	ret
 
 ;;; bool _cdecl x86DiskRead(uint8_t disk, uint16_t cylinder, uint16_t sector, uint16_t head, uint8_t count, void far *outputData);
 
-global _x86DiskRead
-_x86DiskRead:
-	push bp 											; Save old call frame.
-	mov bp, sp 										; Initialise new call frame.
+global x86DiskRead
+x86DiskRead:
+	push ebp 											; Save old call frame.
+	mov ebp, esp 										; Initialise new call frame.
 
-	push bx 											; Save modified registers.
+	x86EnterRealMode
+	push ebx 											; Save modified registers.
 	push es
 
-	mov dl, [bp + 4] 							; Setup arguments.
+	mov dl, [bp + 8] 							; Setup arguments.
 
-	mov ch, [bp + 6] 							; dl stores the disk number.
-	mov cl, [bp + 7] 							; Lower 8 bits of ch, cylinder
+	mov ch, [bp + 12] 							; dl stores the disk number.
+	mov cl, [bp + 13] 							; Lower 8 bits of ch, cylinder
 	shl cl, 6
 
-	mov al, [bp + 8] 							; Sector is bits 0-5 of cl.
+	mov al, [bp + 16] 							; Sector is bits 0-5 of cl.
 	and al, 0x3F
 	or cl, al
 
-	mov dh, [bp + 10] 						; dh stores the head.
+	mov dh, [bp + 20] 						; dh stores the head.
 
-	mov al, [bp + 12] 						; al stores the count.
+	mov al, [bp + 24] 						; al stores the count.
 
-	mov bx, [bp + 16] 						; es:bx is a far pointer to outputData.
-	mov es, bx
-	mov bx, [bp + 14]
+	ConvertLinearAddressToSegmentOffsetAddress [bp + 28], es, ebx, bx
 
 	mov ah, 0x02 									; Call disk interrupt.
 	stc
 	int 0x13
 
-	mov ax, 1 										; Set return value.
-	sbb ax, 0 										; Success = 1.
+	mov eax, 1 										; Set return value.
+	sbb eax, 0 										; Success = 1.
 
 	pop es 												; Antisave registers.
-	pop bx
+	pop ebx
 
-	mov sp, bp 										; Antisave old call frame.
-	pop bp
+	push eax
+	x86EnterProtectedMode
+
+	pop eax
+
+	mov esp, ebp 										; Antisave old call frame.
+	pop ebp
 	ret
 
 ;;; bool _cdecl x86DiskGetParameters(uint8_t disk, uint8_t* outputDriveType, uint16_t* outputCylinders, uint16_t* outputSectors, uint16_t* outputHeads);
 
-global _x86DiskGetParameters
-_x86DiskGetParameters:
-	push bp 											; Save old call frame.
-	mov bp, sp 										; Initialise new call frame.
+global x86DiskGetParameters
+x86DiskGetParameters:
+	[bits 32]
+	push ebp 											; Save old call frame.
+	mov ebp, esp 										; Initialise new call frame.
 
+	x86EnterRealMode
+	[bits 16]
 	push es 											; Save registers.
 	push bx
 	push si
 	push di
 
-	mov dl, [bp + 4] 							; dl stores the disk number.
+	mov dl, [bp + 8] 							; dl stores the disk number.
 	mov ah, 0x08
 	mov di, 0
 	mov es, di
@@ -136,69 +163,40 @@ _x86DiskGetParameters:
 	mov ax, 1 										; Return.
 	sbb ax, 0
 
-	mov si, [bp + 6] 							; Set output parameters.
-	mov [si], bl
+	ConvertLinearAddressToSegmentOffsetAddress [bp + 12], es, esi, si
+	mov [es:si], bl
 
 	mov bl, ch
 	mov bh, cl
 	shr bh, 6
-	mov si, [bp + 8]
-	mov [si], bx
+	inc bx
+
+	ConvertLinearAddressToSegmentOffsetAddress [bp + 16], es, esi, si
+	mov [es:si], bx
 
 	xor ch, ch
 	and cl, 0x3F
-	mov si, [bp + 10]
-	mov [si], cx
+
+	ConvertLinearAddressToSegmentOffsetAddress [bp + 20], es, esi, si
+	mov [es:si], cx
 
 	mov cl, dh
-	mov si, [bp + 12]
-	mov [si], cx
+	inc cx
+
+	ConvertLinearAddressToSegmentOffsetAddress [bp + 24], es, esi, si
+	mov [es:si], cx
 
 	pop di 												; Antisave registers.
 	pop si
 	pop bx
 	pop es
 
-	mov sp, bp 										; Antisave old call frame.
-	pop bp
-	ret
+	push eax
+	x86EnterProtectedMode
+	[bits 32]
+	pop eax
 
-;;;
-;;; WATCOM ARITHMETIC ROUTINES
-;;;
-
-global __U4D
-__U4D:
-	shl edx, 16 									; Upper half of edx.
-	mov dx, ax 										; edx = numerator.
-	mov eax, edx 									; eax = numerator.
-	xor edx, edx
-
-	shl ecx, 16 									; Upper half of ecx.
-	mov cx, bx 										; ecx = denominator.
-
-	div ecx 											; eax = quotient, edx = remainder.
-	mov ebx, edx
-	mov ecx, edx
-	shr ecx, 16
-
-	mov edx, eax
-	shr edx, 16
-
-	ret
-
-global __U4M
-__U4M:
-	shl edx, 16 									; Upper half of edx.
-	mov dx, ax 										; edx = multipland.
-	mov eax, edx 									; eax = multipland.
-
-	shl ecx, 16 									; Upper half of ecx.
-	mov cx, bx 										; ecx = multiplier.
-
-	mul ecx 											; Result stored in edx:eax.
-	mov edx, eax 									; Move upper half to dx.
-	shr edx, 16
-
+	mov esp, ebp 										; Antisave old call frame.
+	pop ebp
 	ret
 
