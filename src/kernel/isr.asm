@@ -1,6 +1,8 @@
 %macro ISRErrorStub 1
 ISRStub_%+%1:
+	push dword %1
 	call exceptionHandler
+	pop eax
 	iret
 %endmacro
 
@@ -15,38 +17,38 @@ ISRStub_%+%1:
 extern exceptionHandler
 extern interruptHandler
 
-ISRNormalStub 0
-ISRNormalStub 1
-ISRNormalStub 2
-ISRNormalStub 3
-ISRNormalStub 4
-ISRNormalStub 5
-ISRNormalStub 6
-ISRNormalStub 7
+ISRErrorStub  0
+ISRErrorStub  1
+ISRErrorStub  2
+ISRErrorStub  3
+ISRErrorStub  4
+ISRErrorStub  5
+ISRErrorStub  6
+ISRErrorStub  7
 ISRErrorStub  8
-ISRNormalStub 9
+ISRErrorStub  9
 ISRErrorStub  10
 ISRErrorStub  11
 ISRErrorStub  12
 ISRErrorStub  13
 ISRErrorStub  14
-ISRNormalStub 15
-ISRNormalStub 16
+ISRErrorStub  15
+ISRErrorStub  16
 ISRErrorStub  17
-ISRNormalStub 18
-ISRNormalStub 19
-ISRNormalStub 20
-ISRNormalStub 21
-ISRNormalStub 22
-ISRNormalStub 23
-ISRNormalStub 24
-ISRNormalStub 25
-ISRNormalStub 26
-ISRNormalStub 27
-ISRNormalStub 28
-ISRNormalStub 29
+ISRErrorStub  18
+ISRErrorStub  19
+ISRErrorStub  20
+ISRErrorStub  21
+ISRErrorStub  22
+ISRErrorStub  23
+ISRErrorStub  24
+ISRErrorStub  25
+ISRErrorStub  26
+ISRErrorStub  27
+ISRErrorStub  28
+ISRErrorStub  29
 ISRErrorStub  30
-ISRNormalStub 31
+ISRErrorStub  31
 ISRNormalStub 32
 ISRNormalStub 33
 ISRNormalStub 34
@@ -60,7 +62,7 @@ ISRNormalStub 41
 ISRNormalStub 42
 ISRNormalStub 43
 ISRNormalStub 44
-ISRNormalStub 45
+ISRErrorStub  45
 ISRNormalStub 46
 ISRNormalStub 47
 
