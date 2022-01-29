@@ -221,6 +221,11 @@ void print(const char* format, ...) {
 				sign = false;
 				number = true;
 				break;
+			case 'b':
+				radix = 2;
+				sign = false;
+				number = true;
+				break;
 			case 'a':
 				radix = 6;
 				sign = false;
