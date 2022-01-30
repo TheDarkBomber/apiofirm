@@ -208,3 +208,10 @@ void cbufferprint(const char *message, const void *buffer, uint16_t count) {
 	}
 	comstrput("\r\n");
 }
+
+void comget(char *buffer, char stop) {
+	while ((*buffer = SerialRead()) != stop) {
+		SerialWrite(buffer);
+		buffer++;
+	}
+}

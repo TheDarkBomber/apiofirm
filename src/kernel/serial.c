@@ -4,7 +4,7 @@
 
 #define COM1 0x3F8
 
-static bool InitialiseSerial() {
+bool InitialiseSerial() {
 	x86Output(COM1 + 1, 0x00);
 	x86Output(COM1 + 3, 0x80);
 	x86Output(COM1 + 0, 0x03);

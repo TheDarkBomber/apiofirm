@@ -6,5 +6,6 @@
 void comstrput(const char *s);
 void cbufferprint(const char *message, const void *buffer, uint16_t count);
 void cprint(const char *format, ...);
+void comget(char* buffer, char stop);
 
 #endif

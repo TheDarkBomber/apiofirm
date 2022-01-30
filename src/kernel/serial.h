@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-static bool InitialiseSerial();
+bool InitialiseSerial();
 
 int SerialReceived();
 int TransmitEmpty();
