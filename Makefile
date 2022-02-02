@@ -14,7 +14,8 @@ image: boot kernel crxboot
 	dd if=/dev/zero of=$(IMAGEFILE) bs=512 count=2880
 	mkfs.fat -F 12 -n "APIOFIRMCRX" $(IMAGEFILE)
 	dd if=$(BOOTFILE) of=$(IMAGEFILE) conv=notrunc
-	mcopy -i $(IMAGEFILE) $(KERNEL) "::system.k"
+	mmd -i $(IMAGEFILE) "::boot"
+	mcopy -i $(IMAGEFILE) $(KERNEL) "::boot/system.k"
 	mcopy -i $(IMAGEFILE) $(CRXBOOT) "::crxboot.kb"
 	mmd -i $(IMAGEFILE) "::bees"
 	mcopy -i $(IMAGEFILE) apioform.txt "::bees/apioform.bee"

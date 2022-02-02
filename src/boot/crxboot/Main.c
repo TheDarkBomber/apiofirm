@@ -32,7 +32,7 @@ void __attribute__((cdecl)) cstart_(uint16_t bootLocation) {
 	print("[CRXBOOT] In base 6, 0x%x = %a\r\n", 0x0BEE, 0x0BEE);
 	print("[CRXBOOT] In niftimal, that's %A\r\n", 0x0BEE);
 
-	FATFile* fileData = FATOpen(&disk, "/system.k  ");
+	FATFile* fileData = FATOpen(&disk, "/Boot/system.k  ");
 	uint32_t read;
 	uint8_t* beeBuffer = Bee;
 	while ((read = FATRead(&disk, fileData, MEMORY_LOAD_SIZE, KERNEL_LOAD_BUFFER))) {

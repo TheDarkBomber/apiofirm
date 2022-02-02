@@ -210,8 +210,11 @@ void cbufferprint(const char *message, const void *buffer, uint16_t count) {
 }
 
 void comget(char *buffer, char stop) {
+	uint16_t i = 0;
 	while ((*buffer = SerialRead()) != stop) {
-		SerialWrite(buffer);
+		SerialWrite(*buffer);
 		buffer++;
+		i++;
 	}
+	buffer -= i;
 }

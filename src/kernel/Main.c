@@ -3,6 +3,7 @@
 #include "pic.h"
 #include "stdio.h"
 #include "memory.h"
+#include "paging.h"
 #include "x86.h"
 #include "serial.h"
 #include "comstdio.h"
@@ -27,6 +28,10 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 
 	__asm__ volatile ("sti");
 	if (!InitialiseSerial()) comstrput("[KERNEL] Initialised serial.\r\n");
+
+	InitialisePaging();
+	print("[KERNEL] Initialised paging.\r\n");
+	cprint("[KERNEL] Page directory located at %x\r\n", x86ReadCR3());
 
 	for(;;);
 }
