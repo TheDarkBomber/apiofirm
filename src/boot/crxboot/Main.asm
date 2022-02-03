@@ -8,9 +8,10 @@ extern cstart_
 global entry
 
 entry:
-	cli
-
 	mov [BootDisk], dl 						; dl contains the boot disk number.
+
+	call CreateMemoryMap 					; Create a memory map for the kernel to use.
+	cli
 
 	mov ax, ds 										; Setup the stack.
 	mov ss, ax
@@ -47,6 +48,53 @@ entry:
 
 	cli
 	hlt
+
+CreateMemoryMap:
+	[bits 16]
+	mov di, 0x8004 								; Origin of memory map.
+	xor ebx, ebx 									; Clear ebx.
+	xor bp, bp 										; Entry count stored in bp.
+	mov edx, 0x0534D4150 					; Magical number 'SMAP'.
+	mov eax, 0xE820 							; For interrupt 0x15.
+	mov [es:di + 20], dword 1 		; ACPI 3.0.
+	mov ecx, 24 									; Each memory map region is 24 bytes in length.
+	int 0x15 											; Memory map interrupt, uses value set in eax.
+	jc short .failure 						; Unsupported function.
+	mov edx, 0x0534D4150 					; Reset magical number.
+	cmp eax, edx
+	jne short .failure
+	test ebx, ebx 								; Test if list is 1 entry in length.
+	je short .failure
+	jmp short .next
+.loop:
+	mov eax, 0xE820 							; Reset value to 0xE820.
+	mov [es:di + 20], dword 1 		; ACPI 3.0.
+	mov ecx, 24 									; Each memory map region is 24 bytes in length.
+	int 0x15 											; Memory map interrupt.
+	jc short .finished 						; If the carry flag is set, the the memory map is whole.
+	mov edx, 0x0534D4150 					; Reset magical number.
+.next:
+	jcxz .skipentry 							; Skip entries with no length.
+	cmp cl, 20 										; Test if interrupt 0x15 response is valid.
+	jbe short .notext
+	test byte [es:di + 20], 1 		; Test if data should be ignored.
+	je short .skipentry
+.notext:
+	mov ecx, [es:di + 8] 					; Lower 32 bits of memory region length.
+	or ecx, [es:di + 12] 					; Bitwise or with upper 32 bits.
+	jz .skipentry 								; If it happens to be 0, skip the entry.
+	inc bp 												; Increment entry count.
+	add di, 24
+.skipentry:
+	test ebx, ebx 								; Indicates whole memory map if 0.
+	jne short .loop
+.finished:
+	mov [MemoryMapEntries], bp 		; Store the entry count at known location in memory.
+	clc 													; Clear the carry flag.
+	ret
+.failure:
+	stc 													; Set the carry flag if the function is unsupported.
+	ret
 
 EnableA20:
 	[bits 16]
@@ -109,6 +157,8 @@ KeyboardRControlOutputPort equ 0xD0
 KeyboardWControlOutputPort equ 0xD1
 
 ScreenBuffer equ 0xB8000
+
+MemoryMapEntries equ 0x8000 		; Stores memory map entry count at 0x8000.
 
 GDT:
 	dq 0 													; NULL

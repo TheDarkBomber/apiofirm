@@ -3,6 +3,7 @@
 #include "pic.h"
 #include "stdio.h"
 #include "memory.h"
+#include "memmap.h"
 #include "paging.h"
 #include "x86.h"
 #include "serial.h"
@@ -29,9 +30,20 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 	__asm__ volatile ("sti");
 	if (!InitialiseSerial()) comstrput("[KERNEL] Initialised serial.\r\n");
 
+	uint16_t* memoryRegions = (uint16_t*)0x8000;
+	cprint("[KERNEL] Memory regions: 0x%x\r\n", *memoryRegions);
+
 	InitialisePaging();
 	print("[KERNEL] Initialised paging.\r\n");
 	cprint("[KERNEL] Page directory located at %x\r\n", x86ReadCR3());
+
+	for (uint8_t i = 0; i < *memoryRegions; i++) {
+		MemoryMap* map = (MemoryMap*)(MEMORY_MAP_ORIGIN + i * MEMORY_MAP_LENGTH);
+		cprint("[MEMORY MAP] Base address: 0x%x\r\n", map->BaseAddress);
+		cprint("[MEMORY MAP] Region length: 0x%x\r\n", map->RegionLength);
+		cprint("[MEMORY MAP] Region type: 0x%x\r\n", map->RegionType);
+		cprint("[MEMORY MAP] ACPI 3.0 extended attributes: 0b%b\r\n", map->ACPIExtendedAttributes);
+	}
 
 	for(;;);
 }
