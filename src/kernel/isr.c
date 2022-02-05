@@ -6,6 +6,7 @@
 
 void exceptionHandler(uint8_t exception);
 void interruptHandler(uint8_t interrupt);
+void handleBreakpoint();
 
 void KernelPanic(const char* message, uint8_t exception) {
 	cprint("[PANIC] Kernel panic reached, exception code %A (0x%x)\r\n", exception, exception);
@@ -22,6 +23,9 @@ void exceptionHandler(uint8_t exception) {
 	case EXCEPTION_DIVIDE_BY_ZERO:
 		KernelPanic("You can't divide by zero.", exception);
 		break;
+	case EXCEPTION_BREAKPOINT:
+		handleBreakpoint();
+		break;
 	case EXCEPTION_PAGE:
 		KernelPanic("Unexpected page fault.", exception);
 		break;
@@ -32,9 +36,8 @@ void exceptionHandler(uint8_t exception) {
 
 void interruptHandler(uint8_t interrupt) {
 	PICSendEndOfInterrupt(interrupt);
-	uint8_t KeyboardStatus = x86Input(0x64);
-	if (KeyboardStatus & 1) {
-		uint8_t KeyboardScancode = x86Input(0x60);
-		print("A key was pressed. Scancode is %u.\r\n", KeyboardScancode);
-	}
+}
+
+void handleBreakpoint() {
+	cprint("[KERNEL] Breakpoint triggered.\r\n");
 }

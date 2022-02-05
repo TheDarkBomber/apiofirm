@@ -14,8 +14,17 @@ ISRStub_%+%1:
 	iret
 %endmacro
 
+%macro ISR0x21Stub 1
+ISRStub_%+%1:
+	push dword %1
+	call keyboardHandler
+	pop eax
+	iret
+%endmacro
+
 extern exceptionHandler
 extern interruptHandler
+extern keyboardHandler
 
 ISRErrorStub  0
 ISRErrorStub  1
@@ -50,7 +59,7 @@ ISRErrorStub  29
 ISRErrorStub  30
 ISRErrorStub  31
 ISRNormalStub 32
-ISRNormalStub 33
+ISR0x21Stub   33
 ISRNormalStub 34
 ISRNormalStub 35
 ISRNormalStub 36
