@@ -1,21 +1,21 @@
 
 # Table of Contents
 
-1.  [Apiofirm - an operating system for IA32-compatible architectures.](#org385a922)
-2.  [Features](#org03ba809)
-3.  [Bootloader](#orga178055)
-4.  [Building](#org8fd9d57)
-    1.  [i686 Cross Compiler modifications](#org4ec025a)
+1.  [Apiofirm - an operating system for IA32-compatible architectures.](#orgb2dffef)
+2.  [Features](#orgada0f2e)
+3.  [Bootloader](#org4465563)
+4.  [Building](#org22daa64)
+    1.  [i686 Cross Compiler modifications](#org044e72b)
 
 
-<a id="org385a922"></a>
+<a id="orgb2dffef"></a>
 
 # Apiofirm - an operating system for IA32-compatible architectures.
 
 Apiofirm is an operating system for IA32-compatible architectures, eventually AMD64, themed around bees.
 
 
-<a id="org03ba809"></a>
+<a id="orgada0f2e"></a>
 
 # Features
 
@@ -27,7 +27,7 @@ Very few, however:
 -   Functional keyboard layout.
 
 
-<a id="orga178055"></a>
+<a id="org4465563"></a>
 
 # Bootloader
 
@@ -43,7 +43,7 @@ in a FAT12 filesystem. It is an ELF file and a Stage-1 Executable File, stage 2 
 Specifically, it searches for `/Boot/system.k`.
 
 
-<a id="org8fd9d57"></a>
+<a id="org22daa64"></a>
 
 # Building
 
@@ -54,11 +54,13 @@ and a floppy image which stores these files.
 Alternatively, you may manually build each file, or run `make` in the project root for each target separately,
 or just `make image` since that makes all of them, at the moment, or do whatever.
 
-<a id="org4ec025a"></a>
+
+<a id="org044e72b"></a>
 
 ## i686 Cross Compiler modifications
 
 In order for Apiofirm to build correctly, a standard include file, located in `toolchain/lib/gcc/i686-elf/11.1.0/include`
 named `stddef.h` needs to be modified.
 Specifically, you will need to replace definitions for uppercase NULL with lowercase null. Apiofirm uses lowercase null for consistency
-with true and false. This can be done by navigating to the aforesaid directory and executing the command.
+with true and false. This can be done by navigating to the aforesaid directory and executing the command `sed -i 's/#define NULL/#define null/g' stddef.h`.
+
