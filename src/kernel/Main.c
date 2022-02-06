@@ -5,6 +5,7 @@
 #include "memory.h"
 #include "memmap.h"
 #include "paging.h"
+#include "keyboard.h"
 #include "x86.h"
 #include "serial.h"
 #include "comstdio.h"
@@ -45,5 +46,8 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 		cprint("[MEMORY MAP] ACPI 3.0 extended attributes: 0b%b\r\n", map->ACPIExtendedAttributes);
 	}
 
+	comstrput("[KEYBOARD] Setting layout.\r\n");
+	SetStandardKeymap();
+	comstrput("[KEYBOARD] Layout set.\r\n");
 	for(;;);
 }

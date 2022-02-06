@@ -48,7 +48,7 @@ enum PS2Keys {
 	KEY_APOSTROPHE = 0x28,
 	KEY_BACKTICK = 0x29,
 	KEY_SHIFT = 0x2A,
-	KEY_BACKSLASH = 0x2B,
+	KEY_BACKSLASH = 0x56,
 	KEY_Z = 0x2C,
 	KEY_X = 0x2D,
 	KEY_C = 0x2E,
@@ -89,6 +89,7 @@ enum PS2Keys {
 	KEY_K3 = 0x51,
 	KEY_K0 = 0x52,
 	KEY_FRACTIONAL_POINT = 0x53,
+	KEY_OCTOTHORPE = 0x2B,
 	KEY_F11 = 0x57,
 	KEY_F12 = 0x58
 };
@@ -132,5 +133,7 @@ enum PS2KeysExtended {
 	KEY_EMAIL = 0x6C,
 	KEY_MEDIA_SELECT = 0x6D
 };
+
+void SetStandardKeymap();
 
 #endif
