@@ -1,4 +1,5 @@
 #include "keyboard.h"
+#include "pic.h"
 #include "x86.h"
 #include "stdio.h"
 #include <stdint.h>

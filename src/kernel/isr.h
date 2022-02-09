@@ -29,5 +29,6 @@
 #define EXCEPTION_FPU_ERROR 0x2D
 
 void KernelPanic(const char* message, uint8_t exception);
+void KernelSerialDebug();
 
 #endif

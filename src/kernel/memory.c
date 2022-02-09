@@ -1,4 +1,6 @@
 #include "memory.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 void* memcpy(void* destination, const void* source, uint16_t number) {
 	uint8_t * unsigned8destination = (uint8_t *)destination;
@@ -13,7 +15,7 @@ void* memcpy(void* destination, const void* source, uint16_t number) {
 void* memset(void* pointer, int value, uint16_t number) {
 	uint8_t* unsigned8pointer = (uint8_t *)pointer;
 
-	for (uint8_t i = 0; i < number; i++)
+	for (uint16_t i = 0; i < number; i++)
 		unsigned8pointer[i] = (uint8_t)value;
 
 	return pointer;
