@@ -7,6 +7,7 @@
 #include "paging.h"
 #include "keyboard.h"
 #include "x86.h"
+#include "vga.h"
 #include "serial.h"
 #include "comstdio.h"
 
@@ -34,10 +35,6 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 	uint16_t* memoryRegions = (uint16_t*)0x8000;
 	cprint("[KERNEL] Memory regions: 0x%x\r\n", *memoryRegions);
 
-	InitialisePaging();
-	print("[KERNEL] Initialised paging.\r\n");
-	cprint("[KERNEL] Page directory located at %x\r\n", x86ReadCR3());
-
 	for (uint8_t i = 0; i < *memoryRegions; i++) {
 		MemoryMap* map = (MemoryMap*)(MEMORY_MAP_ORIGIN + i * MEMORY_MAP_LENGTH);
 		cprint("[MEMORY MAP] Base address: 0x%x\r\n", map->BaseAddress);
@@ -45,6 +42,10 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 		cprint("[MEMORY MAP] Region type: 0x%x\r\n", map->RegionType);
 		cprint("[MEMORY MAP] ACPI 3.0 extended attributes: 0b%b\r\n", map->ACPIExtendedAttributes);
 	}
+
+	uint8_t* ULTLFPage00 = InitialiseULTLFPage00();
+	VGASetFont(ULTLFPage00);
+	print("[VGA] Loaded ultlf font.\r\n");
 
 	comstrput("[KEYBOARD] Setting layout.\r\n");
 	SetStandardKeymap();
