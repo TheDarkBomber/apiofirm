@@ -12,7 +12,7 @@ void interruptHandler(uint8_t interrupt);
 void handleBreakpoint();
 
 void KernelSerialDebug() {
-	comstrput("Kernel Serial Debuuger.\r\n");
+	comstrput("Kernel Serial Debugger.\r\n");
 	comstrput("Type `help` to get a list of commands.\r\n");
 	char pbuffer[256];
 	char buffer[256];
@@ -33,7 +33,7 @@ void KernelSerialDebug() {
 			comstrput("sti - enable interrupts.\r\n");
 			comstrput("cli - disable interrupts.\r\n");
 			comstrput("halt - halt the CPU.\r\n");
-		} else if (KSERIALDBGCMD("panic\r")) KernelPanic("Manually initated panic.", 0xFF);
+		} else if (KSERIALDBGCMD("panic\r")) KernelPanic("Manually initiated panic.", 0xFF);
 		else if (KSERIALDBGCMD("sti\r")) __asm__ volatile ("sti");
 		else if (KSERIALDBGCMD("cli\r")) __asm__ volatile ("cli");
 		else if (KSERIALDBGCMD("halt\r")) __asm__ volatile ("hlt");

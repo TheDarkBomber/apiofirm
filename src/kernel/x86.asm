@@ -30,6 +30,22 @@ x86WriteCR0:
 	pop ebp
 	ret
 
+global x86ReadCR2
+x86ReadCR2:
+	[bits 32]
+	mov eax, cr2
+	ret
+
+global x86WriteCR2
+x86WriteCR2:
+	[bits 32]
+	push ebp
+	mov ebp, esp
+	mov eax, [ebp + 8]
+	mov cr2, eax
+	pop ebp
+	ret
+
 global x86ReadCR3
 x86ReadCR3:
 	[bits 32]

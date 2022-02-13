@@ -6,6 +6,8 @@
 
 const unsigned SCREEN_WIDTH = 80;
 const unsigned SCREEN_HEIGHT = 25;
+const unsigned TAB_WIDTH = 4;
+const unsigned TAB_HEIGHT = 4;
 
 uint8_t DefaultColour = VGA_YELLOW;
 
@@ -73,7 +75,11 @@ void charput(char c) {
 		break;
 
 	case '\t':
-		ScreenX += 4;
+		ScreenX += TAB_WIDTH;
+		break;
+
+	case '\v':
+		ScreenY += TAB_HEIGHT;
 		break;
 
 	default:
