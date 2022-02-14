@@ -43,6 +43,9 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 		cprint("[MEMORY MAP] ACPI 3.0 extended attributes: 0b%b\r\n", map->ACPIExtendedAttributes);
 	}
 
+	InitialisePaging();
+	print("[KERNEL] Initialised paging.\r\n");
+
 	uint8_t* ULTLFPage00 = InitialiseULTLFPage00();
 	VGASetFont(ULTLFPage00);
 	print("[VGA] Loaded ultlf font.\r\n");

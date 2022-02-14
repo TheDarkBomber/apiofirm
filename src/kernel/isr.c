@@ -32,6 +32,7 @@ void KernelSerialDebug() {
 			comstrput("panic - initiates a Kernel Panic.\r\n");
 			comstrput("sti - enable interrupts.\r\n");
 			comstrput("cli - disable interrupts.\r\n");
+			comstrput("cr2 - read CR2 register.\r\n");
 			comstrput("halt - halt the CPU.\r\n");
 		} else if (KSERIALDBGCMD("panic\r")) KernelPanic("Manually initiated panic.", 0xFF);
 		else if (KSERIALDBGCMD("sti\r")) __asm__ volatile ("sti");
@@ -39,6 +40,7 @@ void KernelSerialDebug() {
 		else if (KSERIALDBGCMD("halt\r")) __asm__ volatile ("hlt");
 		else if (KSERIALDBGCMD("bee\r")) comstrput("Bzzzzzzzzzzzt.\r\n");
 		else if (KSERIALDBGCMD("comget_dump\r")) cbufferprint("COMGET: ", pbuffer, strlen(pbuffer));
+		else if (KSERIALDBGCMD("cr2\r")) cprint("CR2 = 0x%x\r\n", x86ReadCR2());
 	}
 }
 
@@ -64,6 +66,7 @@ void exceptionHandler(uint8_t exception) {
 		handleBreakpoint();
 		break;
 	case EXCEPTION_PAGE:
+		cprint("[PAGE FAULT] Page fault occurred at address 0x%x.\r\n", x86ReadCR2());
 		KernelPanic("Unexpected page fault.", exception);
 		break;
 	default:
