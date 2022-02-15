@@ -20,7 +20,27 @@ void InitialisePaging() {
 	x86WriteCR0(x86ReadCR0() | 0x80000000);
 }
 
-void AllocatePage(uint16_t index) {
+void InitialisePageTable(uint16_t index) {
+	if (PageTable[index]) return;
+	PageTable[index] = (uint32_t *)(PAGE_ORIGIN + index * 0x1000);
+}
+
+void AllocatePage(uint16_t index, uint16_t page) {
+	InitialisePageTable(index);
+	PageAddress = page * 4096;
+	PageTable[index][page] = PageAddress | 3;
+	PageDirectory[index] = PageTable[index];
+	PageDirectory[index] |= 3;
+}
+
+void FreePage(uint16_t index, uint16_t page) {
+	if (!PageTable[index]) return;
+	PageTable[index][page] = 0;
+	for (uint16_t i = 0; i < 1024; i++) if (PageTable[index][i] != 0) return;
+	PageDirectory[index] = 0 | 2;
+}
+
+void AllocatePageBlock(uint16_t index) {
 	PageAddress = 0;
 	PageTable[index] = (uint32_t *)(PAGE_ORIGIN + index * 0x1000);
 	for (uint16_t i = 0; i < 1024; i++) {
@@ -32,8 +52,29 @@ void AllocatePage(uint16_t index) {
 	PageDirectory[index] |= 3;
 }
 
-void FreePage(uint16_t index) {
+void FreePageBlock(uint16_t index) {
 	if (!PageTable[index]) return;
 	for (uint16_t i = 0; i < 1024; i++) PageTable[index][i] = 0;
+	PageDirectory[index] = 0 | 2;
+}
+
+void AllocateManyPages(uint16_t index, uint16_t start, uint16_t count) {
+	if (count == 0 || count > 4096 - start) return;
+	InitialisePageTable(index);
+	PageAddress = start * 4096;
+	for (uint16_t i = start; i < count; i++) {
+		PageTable[index][i] = PageAddress | 3;
+		PageAddress += PAGE_SIZE;
+	}
+
+	PageDirectory[index] = PageTable[index];
+	PageDirectory[index] |= 3;
+}
+
+void FreeManyPages(uint16_t index, uint16_t start, uint16_t count) {
+	if (count == 0 || count > 4096 - start) return;
+	InitialisePageTable(index);
+	for (uint16_t i = start; i < count; i++) PageTable[index][i] = 0;
+	for (uint16_t i = 0; i < 1024; i++) if (PageTable[index][i] != 0) return;
 	PageDirectory[index] = 0 | 2;
 }

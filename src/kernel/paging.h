@@ -8,7 +8,13 @@
 #define PAGE_BLOCK 0x400000
 
 void InitialisePaging();
-void AllocatePage(uint16_t index);
-void FreePage(uint16_t index);
+
+void InitialisePageTable(uint16_t index);
+void AllocatePage(uint16_t index, uint16_t page);
+void FreePage(uint16_t index, uint16_t page);
+void AllocatePageBlock(uint16_t index);
+void FreePageBlock(uint16_t index);
+void AllocateManyPages(uint16_t index, uint16_t start, uint16_t count);
+void FreeManyPages(uint16_t index, uint16_t start, uint16_t count);
 
 #endif
