@@ -1,5 +1,7 @@
 #include "paging.h"
 #include "x86.h"
+#include "isr.h"
+#include "memmap.h"
 #include <stdint.h>
 
 uint32_t *PageDirectory = (uint32_t *)PAGE_DIRECTORY;
@@ -77,4 +79,26 @@ void FreeManyPages(uint16_t index, uint16_t start, uint16_t count) {
 	for (uint16_t i = start; i < count; i++) PageTable[index][i] = 0;
 	for (uint16_t i = 0; i < 1024; i++) if (PageTable[index][i] != 0) return;
 	PageDirectory[index] = 0 | 2;
+}
+
+uint32_t AllocateNextFreePage() {
+	uint32_t regions = *(uint32_t*)MEMORY_MAP_REGIONS;
+	for (uint32_t r = 0; r < regions; r++) {
+		MemoryMap *map = (MemoryMap *)(MEMORY_MAP_ORIGIN + r * MEMORY_MAP_LENGTH);
+		if (map->RegionType != MEMORY_MAP_USABLE) {
+			cprint("Unusable map.\r\n");
+			continue;
+		}
+		uint32_t base = (uint32_t)map->BaseAddress;
+		for (uint32_t i = base; i < base + (uint32_t)map->RegionLength; i++) {
+			uint32_t index = i / PAGE_BLOCK;
+			uint32_t page = i % 1024;
+			if (!PageTable[index]) InitialisePageTable(index);
+			if (!PageTable[index][page]) {
+				AllocatePage(index, page);
+				return (index * PAGE_BLOCK) + (page * PAGE_SIZE);
+			}
+		}
+	}
+	KernelPanic("Out of pages.", 0xCC);
 }

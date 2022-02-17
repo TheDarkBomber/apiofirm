@@ -17,4 +17,6 @@ void FreePageBlock(uint16_t index);
 void AllocateManyPages(uint16_t index, uint16_t start, uint16_t count);
 void FreeManyPages(uint16_t index, uint16_t start, uint16_t count);
 
+uint32_t AllocateNextFreePage();
+
 #endif
