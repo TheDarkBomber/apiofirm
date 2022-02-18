@@ -86,7 +86,6 @@ uint32_t AllocateNextFreePage() {
 	for (uint32_t r = 0; r < regions; r++) {
 		MemoryMap *map = (MemoryMap *)(MEMORY_MAP_ORIGIN + r * MEMORY_MAP_LENGTH);
 		if (map->RegionType != MEMORY_MAP_USABLE) {
-			cprint("Unusable map.\r\n");
 			continue;
 		}
 		uint32_t base = (uint32_t)map->BaseAddress;

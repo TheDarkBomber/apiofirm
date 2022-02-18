@@ -13,5 +13,6 @@ void __attribute__((cdecl)) x86WriteCR3(uint32_t value);
 uint32_t __attribute__((cdecl)) x86ReadCR0();
 uint32_t __attribute__((cdecl)) x86ReadCR2();
 uint32_t __attribute__((cdecl)) x86ReadCR3();
+uint32_t __attribute__((cdecl)) x86ReadEFLAGS();
 
 #endif

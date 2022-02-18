@@ -61,3 +61,10 @@ x86WriteCR3:
 	mov cr3, eax
 	pop ebp
 	ret
+
+global x86ReadEFLAGS
+x86ReadEFLAGS:
+	[bits 32]
+	pushf
+	pop eax
+	ret
