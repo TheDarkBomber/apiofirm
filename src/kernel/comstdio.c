@@ -13,7 +13,7 @@ void comstrput(const char* s) {
 const char CHEXADECIMAL_CHARACTERS[] = "0123456789ABCDEF";
 const char CNIFTIMAL_CHARACTERS[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-comusiprint(unsigned long long number, int radix) {
+void comusiprint(unsigned long long number, int radix) {
 	char buffer[32];
 	int position = 0;
 
@@ -26,7 +26,7 @@ comusiprint(unsigned long long number, int radix) {
 	while (--position >= 0) SerialWrite(buffer[position]);
 }
 
-comsiprint(long long number, int radix) {
+void comsiprint(long long number, int radix) {
 	if (number < 0) {
 		SerialWrite('-');
 		comusiprint(-number, radix);
