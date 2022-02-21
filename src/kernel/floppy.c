@@ -1,6 +1,7 @@
 #include "floppy.h"
 #include "task.h"
 #include "isr.h"
+#include "memory.h"
 #include "pic.h"
 #include "pit.h"
 #include "x86.h"
@@ -21,9 +22,9 @@ const char FloppyDMABuffer[FLOPPY_DMA_LENGTH];
 static const char *FloppyDriveTypes[8] = {
 	"UNKNOWN",
 	"360K",
-	"1.2M",
-	"720K",
 	"1.44M",
+	"720K",
+	"1.2M",
 	"2.88M",
 	"UNKNOWN",
 	"UNKNOWN"
@@ -119,7 +120,7 @@ void FloppyCheckInterrupt(uint8_t *ST0, uint8_t *cylinder) {
 
 void floppyTimer() {
 	for (;;) {
-		Sleep(9);
+		Sleep(1);
 		if (FloppyMotorState == FLOPPY_MOTOR_WAITING) {
 			FloppyMotorTime -= 50;
 			if (FloppyMotorTime == 0) {
@@ -137,7 +138,7 @@ void FloppyMotor(bool state) {
 	if (state) {
 		if (!FloppyMotorState) {
 			x86Output(FLOPPY_DIGITAL_OUTPUT, 0x1C);
-			Sleep(9);
+			Sleep(3);
 		} else {
 			if (FloppyMotorState == FLOPPY_MOTOR_WAITING) cprint("[FLOPPY] Waiting...\r\n");
 			FloppyMotorTime = 300;
@@ -191,13 +192,11 @@ static void InitialiseFloppyDMA(bool write) {
 	address.Long = (uint32_t) &FloppyDMABuffer;
 	count.Long = (uint32_t) FLOPPY_DMA_LENGTH - 1;
 
+	memset(FloppyDMABuffer, 0, FLOPPY_DMA_LENGTH);
+
 	if((address.Long >> 24) || (count.Long >> 16) || ((address.Long & 0xFFFF) + count.Long) >> 16) {
 		KernelPanic("Floppy DMA initialisation error with buffer.", 0xC6);
 	}
-
-	uint8_t mode;
-	if (write) mode = 0x4A;
-	else mode = 0x46;
 
 	x86Output(0x0A, 0x06);
 	x86Output(0x0C, 0xFF);
@@ -207,15 +206,18 @@ static void InitialiseFloppyDMA(bool write) {
 	x86Output(0x0C, 0xFF);
 	x86Output(0x05, count.Byte[0]);
 	x86Output(0x05, count.Byte[1]);
-	x86Output(0x0B, mode);
+	x86Output(0x80, 0);
+	x86Output(0x0A, 0x02);
+	x86Output(0x0A, 0x06);
+	x86Output(0x0B, write ? 0x5A : 0x56);
 	x86Output(0x0A, 0x02);
 }
 
-bool FloppyTrack(uint8_t cylinder, bool write) {
+bool FloppyTrack(uint8_t cylinder, uint8_t head, uint8_t sector, bool write) {
 	uint8_t command;
 	static const uint8_t flags = 0xC0;
 	if (write) command = FLOPPY_WRITE;
-	else command = FLOPPY_READ;
+	else command = FLOPPY_READ | FLOPPY_MULTITRACK | FLOPPY_DENSITY | FLOPPY_SKIP;
 
 	if (!FloppySeek(cylinder, 0)) return false;
 	if (!FloppySeek(cylinder, 1)) return false;
@@ -225,12 +227,12 @@ bool FloppyTrack(uint8_t cylinder, bool write) {
 		InitialiseFloppyDMA(write);
 		Sleep(4);
 		FloppyWrite(command);
-		FloppyWrite(0);
+		FloppyWrite(head << 2);
 		FloppyWrite(cylinder);
-		FloppyWrite(0);
-		FloppyWrite(1);
+		FloppyWrite(head);
+		FloppyWrite(sector);
 		FloppyWrite(2);
-		FloppyWrite(18);
+		FloppyWrite(sector >= 18 ? 18 : sector);
 		FloppyWrite(0x1B);
 		FloppyWrite(0xFF);
 		while (!FloppyAchknowledgeIRQ);
@@ -328,4 +330,3 @@ bool FloppyTrack(uint8_t cylinder, bool write) {
 	FloppyMotor(false);
 	return false;
 }
-

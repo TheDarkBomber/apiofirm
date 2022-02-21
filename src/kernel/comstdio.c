@@ -199,7 +199,7 @@ void cprint(const char* format, ...) {
 	va_end(arguments);
 }
 
-void cbufferprint(const char *message, const void *buffer, uint16_t count) {
+void cbufferprint(const char *message, const void *buffer, uint32_t count) {
 	const uint8_t* unsigned8buffer = (const uint8_t *)buffer;
 	comstrput(message);
 	for (uint16_t i = 0; i < count; i++) {

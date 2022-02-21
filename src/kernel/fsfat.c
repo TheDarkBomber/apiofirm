@@ -1,13 +1,14 @@
 #include "fsfat.h"
 #include "disk.h"
 #include "stdio.h"
-#include "memdefs.h"
 #include "string.h"
 #include "memory.h"
 #include "ctype.h"
-#include "stdmacros.h"
+#include "paging.h"
 #include <stddef.h>
-#include <stdint.h>
+
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 #define SECTOR_SIZE 512
 #define MAXIMUM_PATH_SIZE 256
@@ -71,14 +72,14 @@ bool FATReadTable(DISK* disk) {
 }
 
 bool InitialiseFAT(DISK* disk) {
-	Data = (FATData *)MEMORY_FAT_ADDRESS;
+  Data = (FATData *)MEMORY_FAT_ADDRESS;
 
-	if (!FATReadBootSector(disk)) {
-		strput("[FAT ERROR] Boot sector read failure.\r\n");
-		return false;
+  if (!FATReadBootSector(disk)) {
+    strput("[FAT ERROR] Boot sector read failure.\r\n");
+    return false;
 	}
 
-	FileAllocationTable = (uint8_t *)Data + sizeof(FATData);
+	FileAllocationTable = (uint32_t *)Data + sizeof(FATData);
 	uint32_t FATSize = Data->BootSector.Boot.BytesPSector * Data->BootSector.Boot.SectorsPFAT;
 
 	if (sizeof(FATData) + FATSize >= MEMORY_FAT_SIZE) {
@@ -172,13 +173,14 @@ uint32_t FATRead(DISK* disk, FATFile* file, uint32_t byteCount, void* outputData
 		uint32_t leftInBuffer = SECTOR_SIZE - (fileData->Public.Position % SECTOR_SIZE);
 		uint32_t take = MIN(byteCount, leftInBuffer);
 
-		memcpy(unsigned8outputData, fileData->Buffer + fileData->Public.Position % SECTOR_SIZE, take);
+		uint8_t* d = (uint8_t*)memcpy(unsigned8outputData, fileData->Buffer + fileData->Public.Position % SECTOR_SIZE, take);
 		unsigned8outputData += take;
 		fileData->Public.Position += take;
 		byteCount -= take;
 
 		if (leftInBuffer == take) {
 			if (fileData->Public.Handle == ROOT_HANDLE) {
+				print("Public handle is equal to the root handle.\r\n");
 				++fileData->CurrentCluster;
 
 				if (!ReadDiskSectors(disk, fileData->CurrentCluster, 1, fileData->Buffer)) {
@@ -253,6 +255,7 @@ FATFile* FATOpen(DISK* disk, const char* path) {
 
 	FATFile* current = &Data->RootDirectory.Public;
 
+	memset(name, 0, MAXIMUM_PATH_SIZE);
 	while (*path) {
 		bool isLast = false;
 		const char* delimiter = strchr(path, '/');

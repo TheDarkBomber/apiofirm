@@ -1,5 +1,6 @@
 #include "disk.h"
 #include "floppy.h"
+#include "memory.h"
 #include "x86.h"
 #include "string.h"
 
@@ -9,7 +10,7 @@ bool InitialiseDisk(DISK* disk, uint8_t diskNumber) {
 	uint8_t diskType;
 	uint16_t cylinders, sectors, heads;
 
-	if (!strcmp(FloppyDetectDrive(), "1.44M")) return false;
+	if (strcmp(FloppyDetectDrive(), "1.44M") < 1) return false;
 
 	cylinders = 80;
 	heads = 2;
@@ -40,8 +41,12 @@ bool ReadDiskSectors(DISK *disk, uint32_t LBA, uint8_t sectors, void* outputData
 	ConvertLBAToCHS(disk, LBA, &cylinder, &sector, &head);
 
 	for (uint8_t i = 0; i < 3; i++) {
-		if (FloppyTrack(cylinder, 0)) {
-			outputData = FloppyDMABuffer;
+		if (FloppyTrack(cylinder, head, sector, 0)) {
+			uint8_t DataBuffer[512 * sectors];
+			for (uint32_t i = 0; i < 512 * sectors; i++) {
+				DataBuffer[i] = FloppyDMABuffer[i];
+			}
+			memcpy(outputData, DataBuffer, 512 * sectors);
 			return true;
 		}
 

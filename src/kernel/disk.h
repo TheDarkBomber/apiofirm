@@ -12,6 +12,6 @@ typedef struct {
 void ConvertLBAToCHS(DISK* disk, uint32_t LBA, uint16_t* outputCylinder, uint16_t* outputSector, uint16_t* outputHead);
 
 bool InitialiseDisk(DISK *disk, uint8_t diskLocation);
-bool ReadDiskSectors(DISK *disk, uint32_t LBA, uint8_t sectors, void* lowerOutputData);
+bool ReadDiskSectors(DISK *disk, uint32_t LBA, uint8_t sectors, void* outputData);
 
 #endif

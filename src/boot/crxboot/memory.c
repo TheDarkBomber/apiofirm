@@ -1,10 +1,10 @@
 #include "memory.h"
 
-void* memcpy(void* destination, const void* source, uint16_t number) {
+void* memcpy(void* destination, const void* source, uint32_t number) {
 	uint8_t * unsigned8destination = (uint8_t *)destination;
 	const uint8_t * unsigned8source = (const uint8_t *)source;
 
-	for (uint16_t i = 0; i < number; i++)
+	for (uint32_t i = 0; i < number; i++)
 		unsigned8destination[i] = unsigned8source[i];
 
 	return destination;

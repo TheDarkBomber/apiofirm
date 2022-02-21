@@ -36,7 +36,10 @@ enum FloppyCommands {
 	FLOPPY_LOCK = 20,
 	FLOPPY_VERIFY = 22,
 	FLOPPY_SCAN_LOW_OR_EQUAL = 25,
-	FLOPPY_SCAN_HIGH_OR_EQUAl = 29
+	FLOPPY_SCAN_HIGH_OR_EQUAl = 29,
+	FLOPPY_SKIP = 0x20,
+	FLOPPY_DENSITY = 0x40,
+	FLOPPY_MULTITRACK = 0x80
 };
 
 typedef enum {
@@ -58,5 +61,5 @@ uint16_t FloppyCalibrate();
 bool FloppySeek(uint8_t cylinder, uint8_t head);
 
 static void InitialiseFloppyDMA(bool write);
-bool FloppyTrack(uint8_t cylinder, bool write);
+bool FloppyTrack(uint8_t cylinder, uint8_t head, uint8_t sector, bool write);
 #endif

@@ -13,6 +13,16 @@ static char NormalKeymap[256];
 static char ExtendedKeymap[256];
 static char ShiftKeymap[256];
 
+void kprint(uint8_t scancode) {
+	if (ExtendedMode) {
+		if (ExtendedKeymap[scancode] != 0) charput(ExtendedKeymap[scancode]);
+	} else {
+		if (ShiftMode && ShiftKeymap[scancode] != 0) charput(ShiftKeymap[scancode]);
+		else if (NormalKeymap[scancode] != 0) charput(NormalKeymap[scancode]);
+		if (scancode == KEY_ENTER) charput('\n');
+	}
+}
+
 void handleMagic() {
 	MagicKeyActive = !MagicKeyActive;
 	if (MagicKeyActive) __asm__ volatile ("int $0x03"); // Breakpoint.
@@ -23,7 +33,7 @@ void keyboardHandler(uint8_t interrupt) {
   uint8_t KeyboardStatus = x86Input(0x64);
   if (KeyboardStatus & 1) {
     uint8_t KeyboardScancode = x86Input(0x60);
-    print("A key was pressed. Scancode is %u.\r\n", KeyboardScancode);
+    /* print("A key was pressed. Scancode is %u.\r\n", KeyboardScancode); */
 		if (KeyboardScancode == KEY_MAGIC) handleMagic();
 		if (!ExtendedMode && KeyboardScancode == KEY_EXTENDED) {
 			ExtendedMode = true;
@@ -31,6 +41,7 @@ void keyboardHandler(uint8_t interrupt) {
 		}
 		if (KeyboardScancode == KEY_SHIFT) ShiftMode = true;
 		else if (KeyboardScancode == KEY_SHIFT + KEY_RELEASE_OFFSET) ShiftMode = false;
+		kprint(KeyboardScancode);
 		ExtendedMode = false;
   }
 }
@@ -167,4 +178,6 @@ void SetStandardKeymap() {
 	ShiftKeymap[KEY_OCTOTHORPE] = '~';
 	ShiftKeymap[KEY_LSQP] = '{';
 	ShiftKeymap[KEY_RSQP] = '}';
+
+	ShiftKeymap[KEY_TAB] = '\v';
 }

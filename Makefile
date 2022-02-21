@@ -18,7 +18,7 @@ image: boot kernel crxboot
 	mcopy -i $(IMAGEFILE) $(KERNEL) "::boot/system.k"
 	mcopy -i $(IMAGEFILE) $(CRXBOOT) "::crxboot.kb"
 	mmd -i $(IMAGEFILE) "::bees"
-	mcopy -i $(IMAGEFILE) apioform.txt "::bees/apioform.bee"
+	mcopy -i $(IMAGEFILE) apioform.bee "::bees/apioform.bee"
 
 boot: $(SOURCES)/boot/boot.asm always
 	$(ASSEMBLER) $(SOURCES)/boot/boot.asm -f bin -o $(BOOTFILE)
