@@ -10,7 +10,7 @@ KERNEL=$(BUILD)/system.k
 
 all: image
 
-image: boot kernel crxboot
+image: boot kernel crxboot false
 	dd if=/dev/zero of=$(IMAGEFILE) bs=512 count=2880
 	mkfs.fat -F 12 -n "APIOFIRMCRX" $(IMAGEFILE)
 	dd if=$(BOOTFILE) of=$(IMAGEFILE) conv=notrunc
@@ -19,6 +19,8 @@ image: boot kernel crxboot
 	mcopy -i $(IMAGEFILE) $(CRXBOOT) "::crxboot.kb"
 	mmd -i $(IMAGEFILE) "::bees"
 	mcopy -i $(IMAGEFILE) apioform.bee "::bees/apioform.bee"
+	mmd -i $(IMAGEFILE) "::exe"
+	mcopy -i $(IMAGEFILE) $(BUILD)/exe/false.x "::exe/false.x"
 
 boot: $(SOURCES)/boot/boot.asm always
 	$(ASSEMBLER) $(SOURCES)/boot/boot.asm -f bin -o $(BOOTFILE)
@@ -32,6 +34,11 @@ $(CRXBOOT): always
 
 $(KERNEL): always
 	$(MAKE) -C $(SOURCES)/kernel BUILD=$(abspath $(BUILD))
+
+false: $(BUILD)/exe/false.x
+
+$(BUILD)/exe/false.x: always
+	$(MAKE) -C $(SOURCES)/userspace/exe/false BUILD=$(abspath $(BUILD))
 
 always:
 	mkdir -pv $(BUILD)

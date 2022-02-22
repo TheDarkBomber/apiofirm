@@ -16,6 +16,8 @@
 #include "comstdio.h"
 #include "fsfat.h"
 
+typedef void (*Function)();
+
 extern uint32_t __bss_start;
 extern uint32_t __end;
 
@@ -80,14 +82,14 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 		goto kernel_end;
 	}
 
-	FATFile* fileData = FATOpen(&disk, "/bees");
+	FATFile* fileData = FATOpen(&disk, "/exe");
 	FATDirectoryEntry entry;
 
 	uint8_t i = 0;
-	print("Directory listing for /Bees\r\n");
+	print("Directory listing for /Exe\r\n");
 	setDefaultColour(VGA_LIGHT_RED);
 	while (FATReadEntry(&disk, fileData, &entry) && i++ < 3) {
-		print("disk%d:/BEES/", bootLocation);
+		print("disk%d:/EXE/", bootLocation);
 		for (int i = 0; i < 11; i++) charput(entry.Name[i]);
 		strput("\r\n");
 	}
@@ -108,6 +110,23 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 	}
 	FATAntiopen(fileData);
 	setDefaultColour(VGA_YELLOW);
+
+	print("Executing file /Exe/false.x\r\n");
+	uint8_t* loadAddress = (uint8_t*)AllocateNextFreePage();
+	uint8_t loadBuffer[4096];
+	uint8_t* readBuffer = loadAddress;
+	read = 0;
+	fileData = FATOpen(&disk, "/Exe/false.x  ");
+	while ((read = FATRead(&disk, fileData, sizeof(loadBuffer), loadBuffer))) {
+		memcpy(readBuffer, loadBuffer, read);
+		readBuffer += read;
+	}
+	print("Loaded file /Exe/false.x\r\n");
+	FATAntiopen(fileData);
+	Function exeFalse = (Function)loadBuffer;
+	exeFalse();
+	print("Executed file.\r\n");
+
  kernel_end:
 	for (;;);
 }
