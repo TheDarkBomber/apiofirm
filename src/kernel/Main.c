@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "gdt.h"
 #include "idt.h"
 #include "pic.h"
 #include "pit.h"
@@ -22,6 +23,16 @@ extern uint32_t __bss_start;
 extern uint32_t __end;
 
 static Task workerTask;
+static Task utask;
+
+Function exeFalse;
+extern void userspace();
+
+void UTaskRun() {
+	exeFalse();
+}
+
+void testing() {};
 
 void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 	setprintPosition(0, 4);
@@ -34,6 +45,9 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 	IRQMaskAll();
 	IRQClearMask(0x01);
 	print("[KERNEL] Remapped PIC.\r\n");
+
+	InitialiseGDT();
+	print("[KERNEL] Initialised GDT.\r\n");
 
 	InitialiseIDT();
 	print("[KERNEL] Initialised IDT.\r\n");
@@ -66,6 +80,8 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 	InitialiseMultitasking();
 	workerTask.nextTask = &workerTask;
 	SetTask(&workerTask);
+	CreateTask(&utask, UTaskRun);
+
 	FloppyDetectDrives();
 	IRQClearMask(0x00);
 	DISK disk;
@@ -112,7 +128,8 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 	setDefaultColour(VGA_YELLOW);
 
 	print("Executing file /Exe/false.x\r\n");
-	uint8_t* loadAddress = (uint8_t*)AllocateNextFreePage();
+	AllocatePage(2, 6);
+	uint8_t* loadAddress = (uint8_t*)(PAGE_BLOCK * 2 + PAGE_SIZE * 6);
 	uint8_t loadBuffer[4096];
 	uint8_t* readBuffer = loadAddress;
 	read = 0;
@@ -123,8 +140,9 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 	}
 	print("Loaded file /Exe/false.x\r\n");
 	FATAntiopen(fileData);
-	Function exeFalse = (Function)loadBuffer;
-	exeFalse();
+	exeFalse = (Function)loadBuffer;
+	AppendTask(&utask);
+	YieldTask();
 	print("Executed file.\r\n");
 
  kernel_end:

@@ -69,6 +69,9 @@ void exceptionHandler(uint8_t exception) {
 		cprint("[PAGE FAULT] Page fault occurred at address 0x%x.\r\n", x86ReadCR2());
 		KernelPanic("Unexpected page fault.", exception);
 		break;
+	case EXCEPTION_INVALID_OPCODE:
+		KernelPanic("Invalid opcode.", exception);
+		break;
 	default:
 		KernelPanic("Unhandled exception.", exception);
 	}
