@@ -55,3 +55,16 @@ bool ReadDiskSectors(DISK *disk, uint32_t LBA, uint8_t sectors, void* outputData
 
 	return false;
 }
+
+bool WriteDiskSectors(DISK *disk, uint32_t LBA, uint8_t sectors, void *inputData) {
+	uint16_t cylinder, sector, head;
+	ConvertLBAToCHS(disk, LBA, &cylinder, &sector, &head);
+	memcpy(FloppyDMABuffer, inputData, 512 * sectors);
+	for (uint8_t i = 0; i < 3; i++) {
+		if (FloppyTrack(cylinder, head, sector, 1)) {
+			return true;
+		}
+		ResetFloppy();
+	}
+	return false;
+}

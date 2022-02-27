@@ -127,7 +127,7 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 	FATAntiopen(fileData);
 	setDefaultColour(VGA_YELLOW);
 
-	print("Executing file /Exe/false.x\r\n");
+	print("Loading file /Exe/false.x\r\n");
 	AllocatePage(2, 6);
 	uint8_t* loadAddress = (uint8_t*)(PAGE_BLOCK * 2 + PAGE_SIZE * 6);
 	uint8_t loadBuffer[4096];
@@ -141,9 +141,17 @@ void __attribute__((section(".entry"))) bzzzzzt(uint16_t bootLocation) {
 	print("Loaded file /Exe/false.x\r\n");
 	FATAntiopen(fileData);
 	exeFalse = (Function)loadBuffer;
-	AppendTask(&utask);
-	YieldTask();
-	print("Executed file.\r\n");
+
+	print("Loading file /bootstub.x86\r\n");
+	char newMBR[512];
+	read = 0;
+	fileData = FATOpen(&disk, "/bootstub.x86");
+	while ((read = FATRead(&disk, fileData, sizeof(newMBR), newMBR)));
+	FATAntiopen(fileData);
+	setDefaultColour(VGA_MAGENTA);
+	print("Writing /bootstub.x86 to MBR...\r\n");
+	setDefaultColour(VGA_YELLOW);
+	if (WriteDiskSectors(&disk, 0, 1, newMBR)) print("Wrote new MBR.\r\n");
 
  kernel_end:
 	for (;;);

@@ -192,7 +192,7 @@ static void InitialiseFloppyDMA(bool write) {
 	address.Long = (uint32_t) &FloppyDMABuffer;
 	count.Long = (uint32_t) FLOPPY_DMA_LENGTH - 1;
 
-	memset(FloppyDMABuffer, 0, FLOPPY_DMA_LENGTH);
+	if (!write) memset(FloppyDMABuffer, 0, FLOPPY_DMA_LENGTH);
 
 	if((address.Long >> 24) || (count.Long >> 16) || ((address.Long & 0xFFFF) + count.Long) >> 16) {
 		KernelPanic("Floppy DMA initialisation error with buffer.", 0xC6);
@@ -216,8 +216,8 @@ static void InitialiseFloppyDMA(bool write) {
 bool FloppyTrack(uint8_t cylinder, uint8_t head, uint8_t sector, bool write) {
 	uint8_t command;
 	static const uint8_t flags = 0xC0;
-	if (write) command = FLOPPY_WRITE;
-	else command = FLOPPY_READ | FLOPPY_MULTITRACK | FLOPPY_DENSITY | FLOPPY_SKIP;
+	if (write) command = FLOPPY_WRITE | FLOPPY_MDS;
+	else command = FLOPPY_READ | FLOPPY_MDS;
 
 	if (!FloppySeek(cylinder, 0)) return false;
 	if (!FloppySeek(cylinder, 1)) return false;
