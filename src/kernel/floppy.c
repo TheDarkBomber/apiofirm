@@ -194,10 +194,6 @@ static void InitialiseFloppyDMA(bool write) {
 
 	if (!write) memset(FloppyDMABuffer, 0, FLOPPY_DMA_LENGTH);
 
-	if((address.Long >> 24) || (count.Long >> 16) || ((address.Long & 0xFFFF) + count.Long) >> 16) {
-		KernelPanic("Floppy DMA initialisation error with buffer.", 0xC6);
-	}
-
 	x86Output(0x0A, 0x06);
 	x86Output(0x0C, 0xFF);
 	x86Output(0x04, address.Byte[0]);

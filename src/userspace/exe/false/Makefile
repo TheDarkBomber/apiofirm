@@ -1,10 +1,10 @@
 BUILD?=build/
 
-CC=i686-elf-gcc
+CC=clang -target i686-elf
 CCFLAGS=-std=c99 -ffreestanding -nostdlib
 CCLIBRARIES=-lgcc
 LDFLAGS= -T linker.ld -nostdlib
-LD=i686-elf-gcc
+LD=clang -target i686-elf
 
 C_SOURCES=$(wildcard *.c)
 C_OBJECTS=$(patsubst %.c, $(OBJ_LOCATION)/%.o, $(C_SOURCES))

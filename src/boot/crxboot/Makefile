@@ -6,11 +6,11 @@ CC16?=$(WATCOM)/binl/wcc
 CCFLAGS16?=-4 -d3 -s -wx -ms -zl -za99
 LD16?=$(WATCOM)/binl/wlink
 
-CC=i686-elf-gcc
+CC=clang -target i686-elf
 CCFLAGS=-std=c99 -ffreestanding -nostdlib
 CCLIBRARIES=-lgcc
 LDFLAGS= -T linker.ld -nostdlib
-LD=i686-elf-gcc
+LD=clang -target i686-elf
 
 C_SOURCES=$(wildcard *.c)
 ASM_SOURCES=$(wildcard *.asm)

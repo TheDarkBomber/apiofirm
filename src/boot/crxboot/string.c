@@ -1,6 +1,7 @@
 #include "string.h"
 #include <stdint.h>
 #include <stddef.h>
+#define null NULL
 
 const char* strchr(const char* str, char chr) {
 	if (str == null) return null;

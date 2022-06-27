@@ -6,6 +6,7 @@
 #include "ctype.h"
 #include "paging.h"
 #include <stddef.h>
+#define null NULL
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))

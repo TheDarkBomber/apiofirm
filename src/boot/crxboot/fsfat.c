@@ -8,6 +8,7 @@
 #include "stdmacros.h"
 #include <stddef.h>
 #include <stdint.h>
+#define null NULL
 
 #define SECTOR_SIZE 512
 #define MAXIMUM_PATH_SIZE 256

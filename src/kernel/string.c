@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#define null NULL
 
 const char* strchr(const char* str, char chr) {
 	if (str == null) return null;
