@@ -2,6 +2,7 @@
 #include "colours.h"
 #include "maths.h"
 #include "paging.h"
+#include "memory.h"
 
 extern uintptr_t _KStartLoc;
 extern uintptr_t _KEndLoc;
@@ -19,18 +20,31 @@ void _start(BootInfo* boot) {
 	printf("Pitch is %u\nWidth is %u\nHeight is %u\n", boot->GFX.Pitch, boot->GFX.Width, boot->GFX.Height);
 	printf("Font height is 0x%x which is %u which is %a!\n", boot->TFX.Height, boot->TFX.Height, boot->TFX.Height);
 
-	strput("Initialising paging\n");
+	strput("Initialising paging...\n");
 	InitialisePFA(boot->MMap, boot->mmapSize, boot->mmapDSize);
-	strput("Paging initialised!\n");
 
 	uint64_t KSize = (uint64_t)&_KEndLoc - (uint64_t)&_KStartLoc;
 
 	LockPages((char*)&_KStartLoc, U64CeilingDivision(KSize, 4096));
-	strput("Pages locked for kernel use.\n");
 	printf("Total RAM: 0x%x KB\n", PageCTX.TotalMemorySize);
 	printf("Free RAM: 0x%x KB\n", PageCTX.FreeMemorySize);
 	printf("Used RAM: 0x%x KB\n", PageCTX.UsedMemorySize);
 	printf("Reserved RAM: 0x%x KB\n", PageCTX.ReservedMemorySize);
+
+	LockPages((char *)boot->GFX.FrameBuffer, U64CeilingDivision((uint64_t)boot->GFX.FrameBuffer + boot->GFX.Width * boot->GFX.Height * 4 + 0x1000, 4096));
+
+	PML4 = (PageTable*)RequestPage();
+	memset((char*)PML4, 0, 0x1000);
+	for (uint64_t i = 0; i < PageCTX.TotalMemorySize; i += 0x1000) MapMemoryV2P((char*)i, (char*)i);
+
+	for (uint64_t i = (uint64_t)boot->GFX.FrameBuffer; i < (uint64_t)boot->GFX.FrameBuffer + boot->GFX.Width * boot->GFX.Height * 4 + 0x1000; i += 4096)
+		MapMemoryV2P((char*)i, (char*)i);
+
+	asm ("mov %0, %%cr3" : : "r" (PML4));
+
+	TextCTX.Foreground = SOFTGREEN;
+	printf("Paging initialised.\n");
+	TextCTX.Foreground = FG_BEE;
 
 	TextCTX.Foreground = WHITE;
 	printf("END OF KERNEL\n");
