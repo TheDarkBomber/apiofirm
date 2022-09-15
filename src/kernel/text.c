@@ -122,7 +122,11 @@ void siprint(int64_t number, int radix) {
 void printf(const char* format, ...) {
 	va_list arguments;
 	va_start(arguments, format);
+	printfv(format, arguments);
+	va_end(arguments);
+}
 
+void printfv(const char* format, va_list arguments) {
 	int state = PRINT_NORMAL_STATE;
 	int length = PRINT_DEFAULT_LENGTH;
 	int radix = 10;
@@ -267,7 +271,5 @@ void printf(const char* format, ...) {
 
 		format++;
 	}
-
-	va_end(arguments);
 }
 

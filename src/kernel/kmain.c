@@ -3,11 +3,16 @@
 #include "maths.h"
 #include "paging.h"
 #include "memory.h"
+#include "gdt.h"
+#include "idt.h"
+#include "pic.h"
 
 extern uintptr_t _KStartLoc;
 extern uintptr_t _KEndLoc;
 
 void _start(BootInfo* boot) {
+	asm ("cli");
+
 	TextCTX.GFX = &boot->GFX;
 	TextCTX.TFX = &boot->TFX;
 	TextCTX.CursorX = 0;
@@ -20,7 +25,20 @@ void _start(BootInfo* boot) {
 	printf("Pitch is %u\nWidth is %u\nHeight is %u\n", boot->GFX.Pitch, boot->GFX.Width, boot->GFX.Height);
 	printf("Font height is 0x%x which is %u which is %a!\n", boot->TFX.Height, boot->TFX.Height, boot->TFX.Height);
 
-	strput("Initialising paging...\n");
+	PICRemap(0x20, 0x28);
+	IRQMaskAll();
+	IRQClearMask(0x01);
+
+	strput("Initialising GDT...\n");
+	MetaGDT metaGDT;
+	metaGDT.Size = sizeof(GDTStructure) - 1;
+	metaGDT.Offset = (uint64_t)&GDT;
+	LoadGDT(&metaGDT);
+
+	printf("Initialising IDT...\n");
+	InitialiseInterrupts();
+
+  strput("Initialising paging...\n");
 	InitialisePFA(boot->MMap, boot->mmapSize, boot->mmapDSize);
 
 	uint64_t KSize = (uint64_t)&_KEndLoc - (uint64_t)&_KStartLoc;

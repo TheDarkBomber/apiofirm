@@ -1,6 +1,7 @@
 #ifndef __APIOFIRM_TEXT_H_
 #define __APIOFIRM_TEXT_H_
 #include "com.h"
+#include <stdarg.h>
 
 typedef struct {
 	VideoOut* GFX;
@@ -27,6 +28,7 @@ void ClearScreen();
 void charput(char c);
 void strput(const char* s);
 void printf(const char *fmt, ...);
+void printfv(const char* fmt, va_list arguments);
 void SetCursor(int x, int y);
 
 extern TextContext TextCTX;
