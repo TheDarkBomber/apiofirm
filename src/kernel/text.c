@@ -33,7 +33,8 @@ static void displayString(VideoOut *gfx, char *s, int x, int y, uint32_t colour,
 }
 
 void scroll(unsigned lines) {
-	memcpy((char*)TextCTX.GFX->FrameBuffer, (char*)(TextCTX.GFX->FrameBuffer + (lines * TextCTX.TFX->Height * TextCTX.GFX->Pitch)), (TextCTX.GFX->Height * TextCTX.GFX->Width * 4) - (lines * TextCTX.TFX->Height * TextCTX.GFX->Pitch));
+	char* FB = (char*)TextCTX.GFX->FrameBuffer;
+	memcpy(FB, FB + TextCTX.GFX->Pitch * 4 * lines * TextCTX.TFX->Height, TextCTX.GFX->Pitch * 4 * (TextCTX.GFX->Height - lines * TextCTX.TFX->Height));
 	TextCTX.CursorY -= lines;
 	ClearScreen(TextCTX.CursorY * TextCTX.TFX->Height);
 }

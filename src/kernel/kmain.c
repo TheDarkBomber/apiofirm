@@ -31,14 +31,15 @@ void _start(BootInfo* boot) {
 	printf("Used RAM: 0x%x KB\n", PageCTX.UsedMemorySize);
 	printf("Reserved RAM: 0x%x KB\n", PageCTX.ReservedMemorySize);
 
-	LockPages((char *)boot->GFX.FrameBuffer, U64CeilingDivision((uint64_t)boot->GFX.FrameBuffer + boot->GFX.Width * boot->GFX.Height * 4 + 0x1000, 4096));
+	LockPages((char*)boot->GFX.FrameBuffer, U64CeilingDivision((uint64_t)boot->GFX.FrameBuffer + boot->GFX.Pitch * boot->GFX.Height * 4 + 0x1000, 4096));
 
 	PML4 = (PageTable*)RequestPage();
 	memset((char*)PML4, 0, 0x1000);
-	for (uint64_t i = 0; i < PageCTX.TotalMemorySize; i += 0x1000) MapMemoryV2P((char*)i, (char*)i);
 
-	for (uint64_t i = (uint64_t)boot->GFX.FrameBuffer; i < (uint64_t)boot->GFX.FrameBuffer + boot->GFX.Width * boot->GFX.Height * 4 + 0x1000; i += 4096)
+	for (uint64_t i = (uint64_t)boot->GFX.FrameBuffer; i < (uint64_t)boot->GFX.FrameBuffer + boot->GFX.Width * boot->GFX.Pitch * 4 + 0x1000; i += 4096)
 		MapMemoryV2P((char*)i, (char*)i);
+
+	for (uint64_t i = 0; i < PageCTX.TotalMemorySize; i += 0x1000) MapMemoryV2P((char *)i, (char *)i);
 
 	asm ("mov %0, %%cr3" : : "r" (PML4));
 
