@@ -6,6 +6,7 @@
 #include "gdt.h"
 #include "idt.h"
 #include "pic.h"
+#include "keyboard.h"
 
 extern uintptr_t _KStartLoc;
 extern uintptr_t _KEndLoc;
@@ -64,6 +65,8 @@ void _start(BootInfo* boot) {
 	TextCTX.Foreground = SOFTGREEN;
 	printf("Paging initialised.\n");
 	TextCTX.Foreground = FG_BEE;
+
+	SetStandardKeymap();
 
 	TextCTX.Foreground = WHITE;
 	printf("END OF KERNEL\n");
