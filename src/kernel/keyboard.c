@@ -155,7 +155,7 @@ void SetStandardKeymap() {
 	ShiftKeymap[KEY_0] = ')';
 	ShiftKeymap[KEY_1] = '!';
 	ShiftKeymap[KEY_2] = '"';
-	ShiftKeymap[KEY_3] = '\r';
+	ShiftKeymap[KEY_3] = '\xD1';
 	ShiftKeymap[KEY_4] = '$';
 	ShiftKeymap[KEY_5] = '%';
 	ShiftKeymap[KEY_6] = '^';

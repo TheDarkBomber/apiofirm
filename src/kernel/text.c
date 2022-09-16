@@ -12,7 +12,7 @@ static void displayChar(VideoOut *gfx, char c, int x, int y, uint32_t colour, ui
   uint8_t row;
   int xScan = x;
   for (int j = 0; j < font->Height; j++) {
-    row = font->Font[c * font->Height + j];
+    row = font->Font[(unsigned char)c * font->Height + j];
     for (int i = 0; i < 8; i++) {
       if (row & 0x80) bs == 1 ? plotPixel(gfx, xScan, y, colour) : plotBlock(gfx, xScan, y, bs, colour);
       row = row << 1;
