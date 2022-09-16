@@ -32,6 +32,15 @@ static void displayString(VideoOut *gfx, char *s, int x, int y, uint32_t colour,
   }
 }
 
+static void clearChar(VideoOut* gfx, int x, int y, uint32_t colour, FontPSF1* font) {
+	int xScan = x;
+	for (int j = 0; j < font->Height; j++) {
+		for (int i = 0; i < 8; i++, xScan++) plotPixel(gfx, xScan, y, colour);
+		y++;
+		xScan = x;
+	}
+}
+
 void scroll(unsigned lines) {
 	char* FB = (char*)TextCTX.GFX->FrameBuffer;
 	memcpy(FB, FB + TextCTX.GFX->Pitch * 4 * lines * TextCTX.TFX->Height, TextCTX.GFX->Pitch * 4 * (TextCTX.GFX->Height - lines * TextCTX.TFX->Height));
@@ -54,6 +63,13 @@ void charput(char c) {
 		break;
 	case '\f':
 		scroll(TextCTX.GFX->Height / TextCTX.TFX->Height);
+		break;
+	case '\b':
+		if (TextCTX.CursorX == 0) {
+			TextCTX.CursorY--;
+			TextCTX.CursorX = (TextCTX.GFX->Width / 8) - 1;
+		} else TextCTX.CursorX--;
+		clearChar(TextCTX.GFX, TextCTX.CursorX * 8, TextCTX.CursorY * TextCTX.TFX->Height, TextCTX.Background, TextCTX.TFX);
 		break;
 	default:
 		displayChar(TextCTX.GFX, c, TextCTX.CursorX * 8, TextCTX.CursorY * TextCTX.TFX->Height, TextCTX.Foreground, 1, TextCTX.TFX);
