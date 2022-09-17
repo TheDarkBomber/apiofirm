@@ -2,6 +2,7 @@
 #include "panic.h"
 #include "text.h"
 #include "keyboard.h"
+#include "pit.h"
 
 char* ISR_Strings[0x20] = {
 	"Divide by Zero",
@@ -43,6 +44,9 @@ void InterruptHandler(uint64_t irq) {
 		break;
 	case ISR_Keyboard:
 		KeyboardHandler(irq);
+		break;
+	case ISR_Timer:
+		PITHandler();
 		break;
 	default:
 		if (irq <= 20)GenericKernelPanic("An unknown fault 0x%x has occurred.", ISR_Strings[irq], irq);

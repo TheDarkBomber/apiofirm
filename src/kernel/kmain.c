@@ -10,6 +10,7 @@
 #include "acpi.h"
 #include "pci.h"
 #include "heap.h"
+#include "pit.h"
 
 extern uintptr_t _KStartLoc;
 extern uintptr_t _KEndLoc;
@@ -84,6 +85,9 @@ void _start(BootInfo* boot) {
 
 	InitialiseHeap((char*)0x000010000000000, 16);
 	printf("Initialised heap at address 0x%X\n", HeapCTX.Start);
+
+	InitialisePIT();
+	IRQClearMask(0x00);
 
 	TextCTX.Foreground = WHITE;
 	printf("END OF KERNEL\n");
