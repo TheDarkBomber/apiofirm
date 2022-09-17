@@ -7,4 +7,9 @@ inline uint64_t U64CeilingDivision(uint64_t numerator, uint64_t denominator) {
 	else return (numerator / denominator) + 1;
 }
 
+inline uint64_t U64CeilingRound(uint64_t value, uint64_t boundary) {
+	if (value % boundary != 0) return ((value + boundary) - (value % boundary));
+	else return value;
+}
+
 #endif

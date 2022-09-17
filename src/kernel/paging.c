@@ -1,6 +1,7 @@
 #include "paging.h"
 #include "memory.h"
 #include "maths.h"
+#include "panic.h"
 #include <stddef.h>
 
 PageFrameAllocatorContext PageCTX;
@@ -41,6 +42,7 @@ char* RequestPage() {
 		LastPageBitIndex = bitIndex;
 		return (char*)(bitIndex * 4096);
 	}
+	GenericKernelPanic("There is not enough RAM on the system (%ull bytes) to fulfil the request.", "Out of memory", PageCTX.TotalMemorySize);
 	return NULL;
 }
 

@@ -214,6 +214,7 @@ void printfv(const char* format, va_list arguments) {
 				number = true;
 				break;
 			case 'X':
+				length = PRINT_LLONG_LENGTH;
 			case 'x':
 				radix = 16;
 				sign = false;

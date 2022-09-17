@@ -9,6 +9,7 @@
 #include "keyboard.h"
 #include "acpi.h"
 #include "pci.h"
+#include "heap.h"
 
 extern uintptr_t _KStartLoc;
 extern uintptr_t _KEndLoc;
@@ -80,6 +81,9 @@ void _start(BootInfo* boot) {
 		printf("WARNING: Failed to find MCFG in ACPI tables. Without this, PCI functionality will not be available.\n");
 		TextCTX.Foreground = FG_BEE;
 	}
+
+	InitialiseHeap((char*)0x000010000000000, 16);
+	printf("Initialised heap at address 0x%X\n", HeapCTX.Start);
 
 	TextCTX.Foreground = WHITE;
 	printf("END OF KERNEL\n");
