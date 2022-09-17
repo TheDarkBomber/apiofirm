@@ -7,6 +7,8 @@
 #include "idt.h"
 #include "pic.h"
 #include "keyboard.h"
+#include "acpi.h"
+#include "pci.h"
 
 extern uintptr_t _KStartLoc;
 extern uintptr_t _KEndLoc;
@@ -67,6 +69,17 @@ void _start(BootInfo* boot) {
 	TextCTX.Foreground = FG_BEE;
 
 	SetStandardKeymap();
+
+	SystemDescriptorTable* XSDT = (SystemDescriptorTable*)(boot->RSDP->XSDTAddress);
+	MCFGHeader* MCFG = (MCFGHeader*)ACPIFindTable(XSDT, "MCFG");
+	if (MCFG) {
+		printf("Found MCFG at 0x%x\n", MCFG);
+		InitialisePCI(MCFG);
+	} else {
+		TextCTX.Foreground = SOFTRED;
+		printf("WARNING: Failed to find MCFG in ACPI tables. Without this, PCI functionality will not be available.\n");
+		TextCTX.Foreground = FG_BEE;
+	}
 
 	TextCTX.Foreground = WHITE;
 	printf("END OF KERNEL\n");

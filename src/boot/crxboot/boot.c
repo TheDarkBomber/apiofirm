@@ -61,6 +61,7 @@ typedef struct {
 	void* MMap;
 	uint64_t mmapSize;
 	uint64_t mmapDSize;
+	char* RSDP;
 } BootInfo;
 
 static void plotPixel(VideoOut* gfx, int x, int y, unsigned long pixel) {
@@ -198,6 +199,19 @@ int main(int argc, char** argv) {
 	boot.MMap = MMap;
 	boot.mmapSize = mmapSize;
 	boot.mmapDSize = mmapDSize;
+
+	efi_configuration_table_t* cfgTable = ST->ConfigurationTable;
+	char* RSDP = NULL;
+	efi_guid_t ACPITableGUID = ACPI_20_TABLE_GUID;
+
+	for (uintn_t i = 0; i < ST->NumberOfTableEntries; i++) {
+		if (memcmp((void*)&cfgTable[i].VendorGuid, (void*)&ACPITableGUID, sizeof(efi_guid_t))) {
+			if (!memcmp("RSD PTR ", cfgTable->VendorTable, 8)) RSDP = cfgTable->VendorTable;
+		}
+		cfgTable++;
+	}
+
+	boot.RSDP = RSDP;
 
 	printf("[CRXBOOT] Executing kernel.\n");
 	((void(* __attribute__((sysv_abi)))(BootInfo*))(ElfEntryPoint))(&boot);

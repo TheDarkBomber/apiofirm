@@ -11,7 +11,7 @@ image: $(UEFI) $(ESP)
 
 kernel: $(BUILD)/system.k $(ESP)
 	mcopy -i $(ESP) $(BUILD)/system.k "::system.k"
-	mcopy -i $(ESP) $(RESOURCES)/uegetf-2.psf "::confon.psf"
+	mcopy -i $(ESP) $(RESOURCES)/uegetf-8col.psf "::confon.psf"
 
 $(BUILD)/system.k:
 	$(MAKE) -C $(SOURCES)/kernel BUILD=$(abspath $(BUILD))
