@@ -46,6 +46,23 @@ char* RequestPage() {
 	return NULL;
 }
 
+char* RequestPages(uint64_t amount) {
+	for (uint64_t bitIndex = LastPageBitIndex; bitIndex < PageCTX.PageBufferLength * 8;) {
+		uint64_t increment = 0;
+		for (uint64_t i = 0; i < amount; i++) {
+			if (PageCTX.PageBuffer[(bitIndex + i) / 8] & (1 << (bitIndex % 8))) increment = i;
+		}
+		if (increment) {
+			bitIndex += increment;
+			increment = 0;
+			continue;
+		}
+		LockPages((char*)(bitIndex * 4096), amount);
+		return (char*)(bitIndex * 4096);
+	}
+	return NULL;
+}
+
 void FreePage(char* address) {
 	uint64_t bitIndex = (uint64_t)address / 4096;
 	if (!(PageCTX.PageBuffer[bitIndex / 8] & (1 << (bitIndex % 8)))) return;

@@ -16,6 +16,7 @@ extern PageFrameAllocatorContext PageCTX;
 
 void InitialisePFA(UefiMemoryDescriptor* MMap, uintptr_t mmapSize, uintptr_t mmapDSize);
 char* RequestPage();
+char* RequestPages(uint64_t amount);
 void FreePage(char* address);
 void FreePages(char* address, uint64_t amount);
 void LockPage(char* address);

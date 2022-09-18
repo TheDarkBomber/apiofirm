@@ -72,6 +72,9 @@ void _start(BootInfo* boot) {
 
 	SetStandardKeymap();
 
+	InitialiseHeap((char *)0x000010000000000, 16);
+	printf("Initialised heap at address 0x%X\n", HeapCTX.Start);
+
 	SystemDescriptorTable* XSDT = (SystemDescriptorTable*)(boot->RSDP->XSDTAddress);
 	MCFGHeader* MCFG = (MCFGHeader*)ACPIFindTable(XSDT, "MCFG");
 	if (MCFG) {
@@ -82,9 +85,6 @@ void _start(BootInfo* boot) {
 		printf("WARNING: Failed to find MCFG in ACPI tables. Without this, PCI functionality will not be available.\n");
 		TextCTX.Foreground = FG_BEE;
 	}
-
-	InitialiseHeap((char*)0x000010000000000, 16);
-	printf("Initialised heap at address 0x%X\n", HeapCTX.Start);
 
 	InitialisePIT();
 	IRQClearMask(0x00);

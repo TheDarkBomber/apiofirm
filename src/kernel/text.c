@@ -283,6 +283,7 @@ void printfv(const char* format, va_list arguments) {
 			length = PRINT_DEFAULT_LENGTH;
 			radix = 10;
 			sign = false;
+			number = false;
 			break;
 		}
 

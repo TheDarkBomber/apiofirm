@@ -2,6 +2,7 @@
 #include "paging.h"
 #include "text.h"
 #include "panic.h"
+#include "ahci.h"
 
 static void PCI_InitialiseFunction(uint64_t device, uint64_t function) {
 	uint64_t addr = device + (function << 12);
@@ -9,7 +10,13 @@ static void PCI_InitialiseFunction(uint64_t device, uint64_t function) {
 	PCIDevice* pciDevice = (PCIDevice*)addr;
 
 	if (pciDevice->DeviceID == 0 || pciDevice->DeviceID == 0xFFFF) return;
-	printf("0x%x: Vendor=0x%x Device=0x%x\n", addr, pciDevice->VendorID, pciDevice->DeviceID);
+	printf("[PCI] 0x%x: Vendor=0x%x Device=0x%x\n", addr, pciDevice->VendorID, pciDevice->DeviceID);
+
+	uint32_t deviceType = (pciDevice->Class << 16) | (pciDevice->Subclass << 8) | pciDevice->ProgramInterface;
+	switch (deviceType) {
+	case 0x010601: // AHCI device
+		InitialiseAHCIDriver(pciDevice);
+	}
 }
 
 static void PCI_InitialiseDevice(uint64_t bus, uint64_t device) {

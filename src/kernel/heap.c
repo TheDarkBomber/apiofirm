@@ -48,6 +48,7 @@ void CombineHeapForward(HeapSegment* segment) {
 	if (segment->Next->Next != NULL) segment->Next->Next->Last = segment;
 
 	segment->Length = segment->Length + segment->Next->Length + sizeof(HeapSegment);
+	segment->Next = segment->Next->Next;
 }
 
 void CombineHeapBackward(HeapSegment* segment) {
