@@ -23,6 +23,7 @@ AHCIDriver* InitialiseAHCIDriver(PCIDevice* device) {
 	for (int i = 0; i < driver->PortAmount; i++) {
 		ConfigureAHCIPort(driver->Ports[i]);
 		printf("[AHCI] Configured port %u of type %s\n", driver->Ports[i]->Number, AHCIPortTypeStrings[driver->Ports[i]->Type]);
+
 		driver->Ports[i]->Buffer = RequestPages(16);
 		driver->Ports[i]->PagesAllocated = 16;
 	}
@@ -119,7 +120,7 @@ bool ReadAHCIPort(AHCIPort* port, uint64_t sector, uint32_t size) {
 
 	commandTable->PRDT[0].Data = (uint64_t)port->Buffer;
 	commandTable->PRDT[0].ByteAmount = (size << 9) - 1;
-	commandTable->PRDT[0].InterruptOnCompletion = 1;
+	commandTable->PRDT[0].InterruptOnCompletion = 0;
 
 	AHCIRegisterFISH2D* FIS = (AHCIRegisterFISH2D*)(&commandTable->FIS);
 	FIS->Type = FIS_REGISTER_H2D;

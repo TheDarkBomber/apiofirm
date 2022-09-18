@@ -8,5 +8,6 @@ int memcmp(char* p1, char* p2, uint64_t size);
 
 void mfree(char* addr);
 char* mallocate(uintptr_t size);
+char* mreallocate(char* addr, uintptr_t size);
 
 #endif

@@ -2,6 +2,11 @@
 #define __APIOFIRM_PCI_H_
 #include "acpi.h"
 
+typedef enum {
+	PCINullDriver = 0,
+	PCIAHCIDriver = 1
+} PCIDriverType;
+
 typedef struct {
 	uint16_t VendorID;
 	uint16_t DeviceID;
@@ -37,6 +42,14 @@ typedef struct {
 	uint8_t MaximumLatency;
 } __attribute__((packed)) PCIHeader0;
 
+typedef struct {
+	PCIDriverType Type;
+	PCIDevice* Device;
+	char* Driver;
+} PCIRegister;
+
 void InitialisePCI(MCFGHeader* MCFG);
+extern PCIRegister* PCIRegistry;
+extern uint64_t PCIRegistryLength;
 
 #endif

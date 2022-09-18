@@ -54,3 +54,16 @@ char* mallocate(uintptr_t size) {
 	return mallocate(size);
 }
 
+char* mreallocate(char* addr, uintptr_t size) {
+	if (addr) {
+		char* newAddr = mallocate(size);
+		HeapSegment* segment = (HeapSegment*)addr - 1;
+		memcpy(newAddr, addr, segment->Length);
+		segment->Free = true;
+		CombineHeapForward(segment);
+		CombineHeapBackward(segment);
+		return newAddr;
+	}
+	return mallocate(size);
+}
+

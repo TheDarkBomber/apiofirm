@@ -8,9 +8,11 @@
 #include "pic.h"
 #include "keyboard.h"
 #include "acpi.h"
+#include "ahci.h"
 #include "pci.h"
 #include "heap.h"
 #include "pit.h"
+#include <stddef.h>
 
 extern uintptr_t _KStartLoc;
 extern uintptr_t _KEndLoc;
