@@ -13,6 +13,7 @@
 #include "heap.h"
 #include "pit.h"
 #include "kattrs.h"
+#include "gpt.h"
 #include <stddef.h>
 
 extern uintptr_t _KStartLoc;
@@ -93,6 +94,24 @@ void _start(BootInfo* boot) {
 
 	InitialisePIT();
 	IRQClearMask(0x00);
+
+	AHCIDriver* ahci = (AHCIDriver*)PCIRegistry[0].Driver;
+	ApiofirmDisableEOI();
+	ReadAHCIPort(ahci->Ports[0], 1, 3);
+	ApiofirmEnableEOI();
+	GPTHeader* gpt = (GPTHeader*)ahci->Ports[0]->Buffer;
+	printf("GPT signature = %s\n", gpt->Signature);
+	printf("GPT revision = %u\n", gpt->Revision);
+	printf("GPT checksum = %u\n", gpt->Checksum);
+	printf("GPT header size = %u\n", gpt->HeaderSize);
+	printf("GPT self LBA = %u\n", gpt->SelfLBA);
+	printf("GPT alternate LBA = %u\n", gpt->AlternateLBA);
+	printf("GPT entry LBA = %u\n", gpt->StartLBA);
+	GPTEntry* esp = (GPTEntry*)(ahci->Ports[0]->Buffer + 512);
+	printf("ESP start LBA = %u\n", esp->StartLBA);
+	printf("ESP end LBA = %u\n", esp->EndLBA);
+	printf("ESP name = %#\n", esp->UTF16LEName);
+
 
 	TextCTX.Foreground = WHITE;
 	printf("END OF KERNEL\n");

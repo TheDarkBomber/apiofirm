@@ -148,6 +148,7 @@ void printfv(const char* format, va_list arguments) {
 	int radix = 10;
 	bool sign = false;
 	bool number = false;
+	char* strbuffer;
 
 	while (*format) {
 		switch (state) {
@@ -198,6 +199,13 @@ void printfv(const char* format, va_list arguments) {
 				break;
 			case 's':
 				strput(va_arg(arguments, const char*));
+				break;
+			case '#': // Print UTF-16 LE string as an ASCII string.
+				strbuffer = va_arg(arguments, char*);
+				while (*strbuffer || *(strbuffer + 1)) {
+					charput(*strbuffer);
+					strbuffer += 2;
+				}
 				break;
 			case '%':
 				charput('%');
