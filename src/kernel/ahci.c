@@ -2,6 +2,7 @@
 #include "memory.h"
 #include "paging.h"
 #include "text.h"
+#include "kattrs.h"
 
 const char* AHCIPortTypeStrings[] = {
 	"Null",

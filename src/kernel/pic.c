@@ -1,5 +1,6 @@
 #include "pic.h"
 #include "x86.h"
+#include "kattrs.h"
 
 #define IO_WAIT 0x80
 
@@ -38,6 +39,7 @@ void PICRemap(int offset1, int offset2) {
 }
 
 void PICSendEndOfInterrupt(unsigned char interruptRequest) {
+	if (!ApiofirmCTX.EOI) return;
 	if (interruptRequest >= 8) x86Output(PIC_DRONE_COMMAND, PIC_END_OF_INTERRUPT);
 	x86Output(PIC_WORKER_COMMAND, PIC_END_OF_INTERRUPT);
 }

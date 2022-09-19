@@ -12,6 +12,7 @@
 #include "pci.h"
 #include "heap.h"
 #include "pit.h"
+#include "kattrs.h"
 #include <stddef.h>
 
 extern uintptr_t _KStartLoc;
@@ -19,6 +20,8 @@ extern uintptr_t _KEndLoc;
 
 void _start(BootInfo* boot) {
 	asm ("cli");
+
+	ApiofirmCTX.EOI = 1;
 
 	TextCTX.GFX = &boot->GFX;
 	TextCTX.TFX = &boot->TFX;
