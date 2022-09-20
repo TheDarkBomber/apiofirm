@@ -20,6 +20,7 @@
 #define AHCI_ATA_DEVICE_DRQ 0x08
 #define AHCI_ATA_COMMAND_READ_DMA_EX 0x25
 #define AHCI_ATA_COMMAND_READ_SECTORS_EX 0x24
+#define AHCI_ATA_COMMAND_WRITE_DMA_EX 0x35
 
 #define AHCI_HBA_PxIS_TFES (1 << 30)
 
@@ -155,6 +156,6 @@ void ConfigureAHCIPort(AHCIPort* port);
 void StartAHCICommandEngine(AHCIPort* port);
 void StopAHCICommandEngine(AHCIPort* port);
 
-bool ReadAHCIPort(AHCIPort* port, uint64_t sector, uint32_t size);
+bool ReadWriteAHCIPort(AHCIPort* port, uint64_t sector, uint32_t size, bool write);
 
 #endif

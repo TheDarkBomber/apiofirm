@@ -107,13 +107,13 @@ void StartAHCICommandEngine(AHCIPort* port) {
 	port->HBA->CommandStatus |= AHCI_HBA_PxCMD_ST;
 }
 
-bool ReadAHCIPort(AHCIPort* port, uint64_t sector, uint32_t size) {
+bool ReadWriteAHCIPort(AHCIPort* port, uint64_t sector, uint32_t size, bool write) {
 	uint32_t lowerSector = (uint32_t)sector;
 	uint32_t upperSector = (uint32_t)(sector >> 32);
 	port->HBA->InterruptStatus = (uint32_t)-1;
 	AHCICommandHBA* command = (AHCICommandHBA*)port->HBA->CommandListBase;
 	command->CommandFISLength = sizeof(AHCIRegisterFISH2D) / sizeof(uint32_t);
-	command->Write = 0;
+	command->Write = write;
 	command->PRDTLength = 1;
 
 	AHCICommandTableHBA* commandTable = (AHCICommandTableHBA*)(command->CommandTableBase);
@@ -126,7 +126,7 @@ bool ReadAHCIPort(AHCIPort* port, uint64_t sector, uint32_t size) {
 	AHCIRegisterFISH2D* FIS = (AHCIRegisterFISH2D*)(&commandTable->FIS);
 	FIS->Type = FIS_REGISTER_H2D;
 	FIS->CommandControl = 1;
-	FIS->Command = AHCI_ATA_COMMAND_READ_DMA_EX;
+	FIS->Command = write ? AHCI_ATA_COMMAND_WRITE_DMA_EX : AHCI_ATA_COMMAND_READ_DMA_EX;
 
 	FIS->LBA0 = (uint8_t)lowerSector;
 	FIS->LBA1 = (uint8_t)(lowerSector >> 8);
