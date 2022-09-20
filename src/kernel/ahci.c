@@ -152,3 +152,59 @@ bool ReadWriteAHCIPort(AHCIPort* port, uint64_t sector, uint32_t size, bool writ
 
 	return true;
 }
+
+// DISK API
+
+bool AHCIDiskAPI_ReadSector(AHCIPort* driver, uint64_t LBA, char* data) {
+	ApiofirmDisableEOI();
+	if (!ReadWriteAHCIPort(driver, LBA, 1, false)) return false;
+	ApiofirmEnableEOI();
+	memcpy(data, driver->Buffer, 512);
+	return true;
+}
+
+bool AHCIDiskAPI_WriteSector(AHCIPort* driver, uint64_t LBA, char* data) {
+	ApiofirmDisableEOI();
+	memcpy(driver->Buffer, data, 512);
+	bool success = ReadWriteAHCIPort(driver, LBA, 1, true);
+	ApiofirmEnableEOI();
+	return success;
+}
+
+bool AHCIDiskAPI_ReadSectors(AHCIPort* driver, uint64_t LBA, uint64_t amount, char* data) {
+	uint64_t SectorsPerPBuffer = (driver->PagesAllocated * 4096) / 512;
+	uint64_t Cycles = amount / SectorsPerPBuffer;
+	uint64_t Take = amount % SectorsPerPBuffer;
+	int i = 0;
+	for (; Cycles > 0; Cycles--, i++) {
+		ApiofirmDisableEOI();
+		if (!ReadWriteAHCIPort(driver, LBA + (SectorsPerPBuffer * i), SectorsPerPBuffer, false)) return false;
+		ApiofirmEnableEOI();
+		memcpy(data + (512 * SectorsPerPBuffer * i), driver->Buffer, 512 * SectorsPerPBuffer);
+	}
+
+	ApiofirmDisableEOI();
+	if (!ReadWriteAHCIPort(driver, LBA + (SectorsPerPBuffer * i), Take, false)) return false;
+	ApiofirmEnableEOI();
+	memcpy(data + (512 * SectorsPerPBuffer * i), driver->Buffer, 512 * Take);
+	return true;
+}
+
+bool AHCIDiskAPI_WriteSectors(AHCIPort* driver, uint64_t LBA, uint64_t amount, char* data) {
+	uint64_t SectorsPerPBuffer = (driver->PagesAllocated * 4096) / 512;
+	uint64_t Cycles = amount / SectorsPerPBuffer;
+	uint64_t Take = amount % SectorsPerPBuffer;
+	int i = 0;
+	for (; Cycles > 0; Cycles--, i++) {
+		memcpy(driver->Buffer, data + (512 * SectorsPerPBuffer * i), 512 * SectorsPerPBuffer);
+		ApiofirmDisableEOI();
+		if (!ReadWriteAHCIPort(driver, LBA + (SectorsPerPBuffer * i), SectorsPerPBuffer, true)) return false;
+		ApiofirmEnableEOI();
+	}
+
+	memcpy(driver->Buffer, data + (512 * SectorsPerPBuffer * i), 512 * SectorsPerPBuffer);
+	ApiofirmDisableEOI();
+	bool success = ReadWriteAHCIPort(driver, LBA + (SectorsPerPBuffer * i), Take, true);
+	ApiofirmEnableEOI();
+	return success;
+}

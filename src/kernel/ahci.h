@@ -158,4 +158,11 @@ void StopAHCICommandEngine(AHCIPort* port);
 
 bool ReadWriteAHCIPort(AHCIPort* port, uint64_t sector, uint32_t size, bool write);
 
+// DISK API
+
+bool AHCIDiskAPI_ReadSector(AHCIPort* driver, uint64_t LBA, char* data);
+bool AHCIDiskAPI_WriteSector(AHCIPort* driver, uint64_t LBA, char* data);
+bool AHCIDiskAPI_ReadSectors(AHCIPort* driver, uint64_t LBA, uint64_t amount, char* data);
+bool AHCIDiskAPI_WriteSectors(AHCIPort* driver, uint64_t LBA, uint64_t amount, char* data);
+
 #endif
