@@ -1,6 +1,7 @@
 #ifndef __APIOFIRM_AHCI_H_
 #define __APIOFIRM_AHCI_H_
 #include "pci.h"
+#include "disk.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -152,6 +153,8 @@ AHCIDriver* InitialiseAHCIDriver(PCIDevice* device);
 void ProbeAHCIPorts(AHCIDriver* driver);
 AHCIPortType AHCICheckPortType(AHCIPortHBA* port);
 
+void AHCIClearInterrupts(AHCIDriver* driver);
+
 void ConfigureAHCIPort(AHCIPort* port);
 void StartAHCICommandEngine(AHCIPort* port);
 void StopAHCICommandEngine(AHCIPort* port);
@@ -164,5 +167,7 @@ bool AHCIDiskAPI_ReadSector(AHCIPort* driver, uint64_t LBA, char* data);
 bool AHCIDiskAPI_WriteSector(AHCIPort* driver, uint64_t LBA, char* data);
 bool AHCIDiskAPI_ReadSectors(AHCIPort* driver, uint64_t LBA, uint64_t amount, char* data);
 bool AHCIDiskAPI_WriteSectors(AHCIPort* driver, uint64_t LBA, uint64_t amount, char* data);
+
+extern DiskAPI AHCIDiskAPI;
 
 #endif

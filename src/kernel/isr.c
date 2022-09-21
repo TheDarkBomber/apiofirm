@@ -34,22 +34,22 @@ char* ISR_Strings[0x20] = {
 	0
 };
 
-void InterruptHandler(uint64_t irq) {
-	switch (irq) {
+void InterruptHandler(InterruptStack* stack) {
+	switch (stack->Interrupt) {
 	case ISR_Page:
-		GenericKernelPanic("A page fault has occurred.", ISR_Strings[irq]);
+		GenericKernelPanic("A page fault has occurred.", ISR_Strings[stack->Interrupt]);
 		break;
 	case ISR_DoubleFault:
-		GenericKernelPanic("A double fault has occurred. Abort.", ISR_Strings[irq]);
+		GenericKernelPanic("A double fault has occurred. Abort.", ISR_Strings[stack->Interrupt]);
 		break;
 	case ISR_Keyboard:
-		KeyboardHandler(irq);
+		KeyboardHandler(stack->Interrupt - 0x20);
 		break;
 	case ISR_Timer:
 		PITHandler();
 		break;
 	default:
-		if (irq <= 20)GenericKernelPanic("An unknown fault 0x%x has occurred.", ISR_Strings[irq], irq);
+		if (stack->Interrupt <= 20) GenericKernelPanic("An unknown fault 0x%x has occurred.", ISR_Strings[stack->Interrupt], stack->Interrupt);
 		break;
 	}
 }

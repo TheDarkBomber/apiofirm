@@ -1,4 +1,5 @@
 #include "ahci.h"
+#include "disk.h"
 #include "memory.h"
 #include "paging.h"
 #include "text.h"
@@ -16,8 +17,13 @@ AHCIDriver* InitialiseAHCIDriver(PCIDevice* device) {
 	AHCIDriver* driver = (AHCIDriver*)mallocate(sizeof(AHCIDriver));
 	driver->PortAmount = 0;
 	driver->PCIBase = device;
+	((PCIHeader0*)device)->InterruptLine = 3;
 	driver->ABAR = (AHCIMemoryHBA*)(uintptr_t)((PCIHeader0*)device)->BAR5;
 	MapMemoryV2P((char*)driver->ABAR, (char*)driver->ABAR);
+	AHCIClearInterrupts(driver);
+	printf("[GHC] 0b%b\n", driver->ABAR->GlobalHostControl);
+	driver->ABAR->GlobalHostControl |= (1 << 1); // Enable interrupts
+	printf("[GHC] 0b%b\n", driver->ABAR->GlobalHostControl);
 	printf("[AHCI] Initialised AHCI driver 0x%X\n", driver->PCIBase);
 	ProbeAHCIPorts(driver);
 
@@ -30,6 +36,16 @@ AHCIDriver* InitialiseAHCIDriver(PCIDevice* device) {
 	}
 
 	return driver;
+}
+
+void AHCIClearInterrupts(AHCIDriver* driver) {
+	driver->ABAR->GlobalHostControl &= ~(1 << 1);
+	for (int i = 0; i < 32; i++) {
+		if ((driver->ABAR->ImplementedPorts & (1 << i)) == 0) continue;
+		driver->ABAR->Ports[i].InterruptEnable = 0;
+		driver->ABAR->Ports[i].InterruptStatus = ~0;
+	}
+	driver->ABAR->InterruptStatus = ~0;
 }
 
 void ProbeAHCIPorts(AHCIDriver* driver) {
@@ -77,6 +93,9 @@ void ConfigureAHCIPort(AHCIPort* port) {
 	char* newFIS = RequestPage();
 	port->HBA->FISAddress = (uint64_t)newFIS;
 	memset(newFIS, 0, 256);
+	port->HBA->SATAError = ~0;
+	port->HBA->InterruptStatus = ~0;
+	port->HBA->InterruptEnable = 1;
 
 	AHCICommandHBA* command = (AHCICommandHBA*)(port->HBA->CommandListBase);
 	for (int i = 0; i < 32; i++) {
@@ -107,11 +126,24 @@ void StartAHCICommandEngine(AHCIPort* port) {
 	port->HBA->CommandStatus |= AHCI_HBA_PxCMD_ST;
 }
 
+static int FindCommandSlot(AHCIPort* port) {
+	uint32_t slots = (port->HBA->SATAActive | port->HBA->CommandIssue);
+	for (int i = 0; i < 32; i++) {
+		if ((slots & 1) == 0) return i;
+		slots = slots >> 1;
+	}
+	printf("[AHCI] No slots available.\n");
+	return -1;
+}
+
 bool ReadWriteAHCIPort(AHCIPort* port, uint64_t sector, uint32_t size, bool write) {
 	uint32_t lowerSector = (uint32_t)sector;
 	uint32_t upperSector = (uint32_t)(sector >> 32);
 	port->HBA->InterruptStatus = (uint32_t)-1;
+	int slot = FindCommandSlot(port);
+	if (slot == -1) return false;
 	AHCICommandHBA* command = (AHCICommandHBA*)port->HBA->CommandListBase;
+	command += slot;
 	command->CommandFISLength = sizeof(AHCIRegisterFISH2D) / sizeof(uint32_t);
 	command->Write = write;
 	command->PRDTLength = 1;
@@ -119,9 +151,20 @@ bool ReadWriteAHCIPort(AHCIPort* port, uint64_t sector, uint32_t size, bool writ
 	AHCICommandTableHBA* commandTable = (AHCICommandTableHBA*)(command->CommandTableBase);
 	memset((char*)commandTable, 0, sizeof(AHCICommandTableHBA) + (command->PRDTLength - 1) * sizeof(AHCIPRDTEntryHBA));
 
-	commandTable->PRDT[0].Data = (uint64_t)port->Buffer;
-	commandTable->PRDT[0].ByteAmount = (size << 9) - 1;
-	commandTable->PRDT[0].InterruptOnCompletion = 0;
+	int i;
+	char* buffer = port->Buffer;
+
+	for (i = 0; i < command->PRDTLength - 1; i++) {
+		commandTable->PRDT[i].Data = (uint64_t)buffer;
+		commandTable->PRDT[i].ByteAmount = 8 * 1024 - 1;
+		commandTable->PRDT[i].InterruptOnCompletion = 1;
+		buffer += 4 * 1024;
+		size -= 16;
+	}
+
+	commandTable->PRDT[i].Data = (uint64_t)port->Buffer;
+	commandTable->PRDT[i].ByteAmount = (size << 9) - 1;
+	commandTable->PRDT[i].InterruptOnCompletion = 1;
 
 	AHCIRegisterFISH2D* FIS = (AHCIRegisterFISH2D*)(&commandTable->FIS);
 	FIS->Type = FIS_REGISTER_H2D;
@@ -143,10 +186,10 @@ bool ReadWriteAHCIPort(AHCIPort* port, uint64_t sector, uint32_t size, bool writ
 	while ((port->HBA->TaskFileData & (AHCI_ATA_DEVICE_BUSY | AHCI_ATA_DEVICE_DRQ)) && spinlock < 1000000) spinlock++;
 	if (spinlock >= 1000000) return false;
 
-	port->HBA->CommandIssue = 1;
+	port->HBA->CommandIssue = 1 << slot;
 
 	for (;;) {
-		if ((port->HBA->CommandIssue & 1) == 0) break;
+		if ((port->HBA->CommandIssue & (1 << slot)) == 0) break;
 		if (port->HBA->InterruptStatus & AHCI_HBA_PxIS_TFES) return false;
 	}
 
@@ -156,18 +199,14 @@ bool ReadWriteAHCIPort(AHCIPort* port, uint64_t sector, uint32_t size, bool writ
 // DISK API
 
 bool AHCIDiskAPI_ReadSector(AHCIPort* driver, uint64_t LBA, char* data) {
-	ApiofirmDisableEOI();
 	if (!ReadWriteAHCIPort(driver, LBA, 1, false)) return false;
-	ApiofirmEnableEOI();
 	memcpy(data, driver->Buffer, 512);
 	return true;
 }
 
 bool AHCIDiskAPI_WriteSector(AHCIPort* driver, uint64_t LBA, char* data) {
-	ApiofirmDisableEOI();
 	memcpy(driver->Buffer, data, 512);
 	bool success = ReadWriteAHCIPort(driver, LBA, 1, true);
-	ApiofirmEnableEOI();
 	return success;
 }
 
@@ -177,15 +216,11 @@ bool AHCIDiskAPI_ReadSectors(AHCIPort* driver, uint64_t LBA, uint64_t amount, ch
 	uint64_t Take = amount % SectorsPerPBuffer;
 	int i = 0;
 	for (; Cycles > 0; Cycles--, i++) {
-		ApiofirmDisableEOI();
 		if (!ReadWriteAHCIPort(driver, LBA + (SectorsPerPBuffer * i), SectorsPerPBuffer, false)) return false;
-		ApiofirmEnableEOI();
 		memcpy(data + (512 * SectorsPerPBuffer * i), driver->Buffer, 512 * SectorsPerPBuffer);
 	}
 
-	ApiofirmDisableEOI();
 	if (!ReadWriteAHCIPort(driver, LBA + (SectorsPerPBuffer * i), Take, false)) return false;
-	ApiofirmEnableEOI();
 	memcpy(data + (512 * SectorsPerPBuffer * i), driver->Buffer, 512 * Take);
 	return true;
 }
@@ -203,8 +238,13 @@ bool AHCIDiskAPI_WriteSectors(AHCIPort* driver, uint64_t LBA, uint64_t amount, c
 	}
 
 	memcpy(driver->Buffer, data + (512 * SectorsPerPBuffer * i), 512 * SectorsPerPBuffer);
-	ApiofirmDisableEOI();
 	bool success = ReadWriteAHCIPort(driver, LBA + (SectorsPerPBuffer * i), Take, true);
-	ApiofirmEnableEOI();
 	return success;
 }
+
+DiskAPI AHCIDiskAPI = {
+	.ReadSingle = (DiskAPI_ReadSector)AHCIDiskAPI_ReadSector,
+	.Read = (DiskAPI_ReadSectors)AHCIDiskAPI_ReadSectors,
+	.WriteSingle = (DiskAPI_WriteSector)AHCIDiskAPI_WriteSector,
+	.Write = (DiskAPI_WriteSectors)AHCIDiskAPI_WriteSectors
+};
