@@ -13,11 +13,10 @@ struct Disk;
 
 typedef struct {
 	struct Disk* Disk;
-	uint64_t implement_later;
+	GPTEntry Header;
 } Partition;
 
 typedef struct {
-	void* Controller;
 	DiskAPI_ReadSector ReadSingle;
 	DiskAPI_WriteSector WriteSingle;
 	DiskAPI_ReadSectors Read;
@@ -26,8 +25,9 @@ typedef struct {
 
 typedef struct Disk {
 	GPTHeader Table;
-	DiskAPI* Driver;
-	Partition* Partitions;
+	DiskAPI* API;
+	void* Driver;
+	Partition** Partitions;
 	uint64_t ID;
 	uint64_t PartitionAmount;
 } Disk;
@@ -37,5 +37,11 @@ extern uint64_t DiskRegistryLength;
 
 bool ReadDiskSectors(Disk* disk, uint64_t LBA, uint64_t amount, char* data);
 bool WriteDiskSectors(Disk* disk, uint64_t LBA, uint64_t amount, char* data);
+
+void InitialiseDisk(Disk* disk);
+
+bool ReadPartitionSectors(Partition* partition, uint64_t LBA, uint64_t amount, char* data);
+bool WritePartitionSectors(Partition* partition, uint64_t LBA, uint64_t amount, char* data);
+
 
 #endif

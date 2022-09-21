@@ -2,6 +2,10 @@
 #define __APIOFIRM_GPT_H_
 #include <stdint.h>
 
+#define GPT_PROTECTIVE_MBR 0
+#define GPT_HEADER 1
+#define GPT_START_OF_ENTRIES 2
+
 typedef struct {
 	char Signature[8];
 	uint32_t Revision;
