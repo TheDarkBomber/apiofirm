@@ -28,5 +28,7 @@ typedef struct {
 } __attribute__((packed)) DeviceCfg;
 
 SystemDescriptorTable* ACPIFindTable(SystemDescriptorTable* SDT, char* signature);
+void ACPISetXSDT(SystemDescriptorTable* XSDT);
+uintptr_t ACPIGetTableAddress(char* signature, uintptr_t index);
 
 #endif

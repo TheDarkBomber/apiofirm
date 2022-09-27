@@ -3,6 +3,7 @@
 #include "text.h"
 #include "keyboard.h"
 #include "pit.h"
+#include "power.h"
 
 char* ISR_Strings[0x20] = {
 	"Divide by Zero",
@@ -36,6 +37,8 @@ char* ISR_Strings[0x20] = {
 
 void InterruptHandler(InterruptStack* stack) {
 	switch (stack->Interrupt) {
+	case ISR_Breakpoint:
+		PowerOff();
 	case ISR_Page:
 		GenericKernelPanic("A page fault has occurred.", ISR_Strings[stack->Interrupt]);
 		break;

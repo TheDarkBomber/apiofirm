@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
 
 	printf("[CRXBOOT] Initialised.\n");
 
-	if ((kernel = fopen("\\system.k", "r"))) {
+	if ((kernel = fopen("\\apiofirm\\bin\\system.k", "r"))) {
 		fseek(kernel, 0, SEEK_END);
 		ksize = ftell(kernel);
 		fseek(kernel, 0, SEEK_SET);
@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
 		printf("[CRXBOOT] TYPE %x\n", ELF->Type);
 		printf("[CRXBOOT] MACHINE %x\n", ELF->Machine);
 		printf("[CRXBOOT] PHC %x\n", ELF->ProgramHeaderCount);
-		printf("[CRXBOOT] Enter at 0x%x\n", ElfEntryPoint);
+		printf("[CRXBOOT] Enter at 0x%x\n", (unsigned int)ElfEntryPoint);
 		printf("[CRXBOOT] Not a bootable ELF AMD64 executable.\n");
 		return 0;
 	}
@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
 
 	printf("[CRXBOOT] Loading font data.\n");
 	FILE* consoleFont;
-	if ((consoleFont = fopen("\\confon.psf", "r"))) {
+	if ((consoleFont = fopen("\\apiofirm\\res\\confon.psf", "r"))) {
 		fread(&boot.TFX, 1, offsetof(FontPSF1, Font), consoleFont);
 		boot.TFX.Font = malloc(boot.TFX.Height * 256);
 		memcpy(boot.TFX.Font, &boot.TFX, 4);

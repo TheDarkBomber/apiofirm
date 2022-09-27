@@ -52,4 +52,12 @@ void InitialisePCI(MCFGHeader* MCFG);
 extern PCIRegister* PCIRegistry;
 extern uint64_t PCIRegistryLength;
 
+uint8_t PCIReadByte(uint32_t bus, uint32_t slot, uint32_t function, uint16_t offset);
+uint16_t PCIReadWord(uint32_t bus, uint32_t slot, uint32_t function, uint16_t offset);
+uint32_t PCIReadDword(uint32_t bus, uint32_t slot, uint32_t function, uint16_t offset);
+
+void PCIWriteByte(uint32_t bus, uint32_t slot, uint32_t function, uint16_t offset, uint8_t value);
+void PCIWriteWord(uint32_t bus, uint32_t slot, uint32_t function, uint16_t offset, uint16_t value);
+void PCIWriteDword(uint32_t bus, uint32_t slot, uint32_t function, uint16_t offset, uint32_t value);
+
 #endif

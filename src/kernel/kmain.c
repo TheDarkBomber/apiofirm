@@ -15,6 +15,8 @@
 #include "kattrs.h"
 #include "gpt.h"
 #include "fat.h"
+#include "disk.h"
+#include <lai/helpers/sci.h>
 #include <stddef.h>
 
 extern uintptr_t _KStartLoc;
@@ -83,6 +85,11 @@ void _start(BootInfo* boot) {
 	printf("Initialised heap at address 0x%X\n", HeapCTX.Start);
 
 	SystemDescriptorTable* XSDT = (SystemDescriptorTable*)(boot->RSDP->XSDTAddress);
+	ACPISetXSDT(XSDT);
+	lai_set_acpi_revision(boot->RSDP->Revision);
+	lai_create_namespace();
+	lai_enable_acpi(0);
+
 	MCFGHeader* MCFG = (MCFGHeader*)ACPIFindTable(XSDT, "MCFG");
 	if (MCFG) {
 		printf("Found MCFG at 0x%x\n", MCFG);
@@ -93,8 +100,8 @@ void _start(BootInfo* boot) {
 		TextCTX.Foreground = FG_BEE;
 	}
 
-	InitialisePIT();
-	IRQClearMask(0x00);
+	/* InitialisePIT(); */
+	/* IRQClearMask(0x00); */ // PIT fundamentally incompatible with AHCI‽
 
 	TextCTX.Foreground = WHITE;
 	printf("END OF KERNEL\n");

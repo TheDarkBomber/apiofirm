@@ -1,4 +1,5 @@
 #include "keyboard.h"
+#include "power.h"
 #include "text.h"
 #include "pic.h"
 #include "x86.h"
@@ -38,6 +39,7 @@ void KeyboardHandler(uint64_t irq) {
 		}
 		if (kbScancode == KEY_SHIFT) ShiftMode = true;
 		else if (kbScancode == KEY_SHIFT + KEY_RELEASE_OFFSET) ShiftMode = false;
+		if (kbScancode == KEY_ESCAPE) ResetComputer();
 		kprint(kbScancode);
 		ExtendedMode = false;
 	}

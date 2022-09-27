@@ -2,6 +2,10 @@
 #include "memory.h"
 #include <stddef.h>
 
+static uintptr_t ACPI_XSDT;
+
+void ACPISetXSDT(SystemDescriptorTable *XSDT) { ACPI_XSDT = (uintptr_t)XSDT; }
+
 SystemDescriptorTable* ACPIFindTable(SystemDescriptorTable* SDT, char* signature) {
 	unsigned entries = (SDT->Length - sizeof(SystemDescriptorTable)) / 8;
 
@@ -11,4 +15,20 @@ SystemDescriptorTable* ACPIFindTable(SystemDescriptorTable* SDT, char* signature
 	}
 
 	return NULL;
+}
+
+uintptr_t ACPIGetTableAddress(char* signature, uintptr_t index) {
+	SystemDescriptorTable* SDT;
+	SystemDescriptorTable* XSDT = (SystemDescriptorTable*)ACPI_XSDT;
+	int count = 0;
+	for (uintptr_t i = 0; i < (XSDT->Length - sizeof(SystemDescriptorTable)) / 8; i++) {
+		SDT = (SystemDescriptorTable*)*(uint64_t*)((uint64_t)XSDT + sizeof(SystemDescriptorTable) + (i * 8));
+		if (!memcmp((char*)SDT->Signature, signature, 4)) {
+			if (count++ == index) {
+				return (uintptr_t)SDT;
+			}
+		}
+	}
+
+	return 0;
 }

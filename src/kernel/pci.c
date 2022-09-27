@@ -4,6 +4,7 @@
 #include "panic.h"
 #include "ahci.h"
 #include "memory.h"
+#include "x86.h"
 
 PCIRegister* PCIRegistry = (void*)0;
 uint64_t PCIRegistryLength = 0;
@@ -54,4 +55,34 @@ void InitialisePCI(MCFGHeader* MCFG) {
 		DeviceCfg* cfg = (DeviceCfg*)((uint64_t)MCFG + sizeof(MCFGHeader) + (sizeof(DeviceCfg) * i));
 		for (uint64_t bus = cfg->StartBus; bus < cfg->EndBus; bus++) PCI_InitialiseBus(cfg->BaseAddress, bus);
 	}
+}
+
+uint8_t PCIReadByte(uint32_t bus, uint32_t slot, uint32_t function, uint16_t offset) {
+	x86OutputDouble(0xCF8, (bus << 16) | (slot << 11) | (function << 8) | (offset & 0xFFFC) | 0x80000000);
+	return x86Input(0xCFC + (offset & 3));
+}
+
+uint16_t PCIReadWord(uint32_t bus, uint32_t slot, uint32_t function, uint16_t offset) {
+  x86OutputDouble(0xCF8, (bus << 16) | (slot << 11) | (function << 8) | (offset & 0xFFFC) | 0x80000000);
+  return x86InputWide(0xCFC + (offset & 2));
+}
+
+uint32_t PCIReadDword(uint32_t bus, uint32_t slot, uint32_t function, uint16_t offset) {
+  x86OutputDouble(0xCF8, (bus << 16) | (slot << 11) | (function << 8) | (offset & 0xFFFC) | 0x80000000);
+  return x86InputDouble(0xCFC);
+}
+
+void PCIWriteByte(uint32_t bus, uint32_t slot, uint32_t function, uint16_t offset, uint8_t value) {
+  x86OutputDouble(0xCF8, (bus << 16) | (slot << 11) | (function << 8) | (offset & 0xFFFC) | 0x80000000);
+	x86Output(0xCFC + (offset & 3), value);
+}
+
+void PCIWriteWord(uint32_t bus, uint32_t slot, uint32_t function, uint16_t offset, uint16_t value) {
+  x86OutputDouble(0xCF8, (bus << 16) | (slot << 11) | (function << 8) | (offset & 0xFFFC) | 0x80000000);
+  x86OutputWide(0xCFC + (offset & 2), value);
+}
+
+void PCIWriteDword(uint32_t bus, uint32_t slot, uint32_t function, uint16_t offset, uint32_t value) {
+  x86OutputDouble(0xCF8, (bus << 16) | (slot << 11) | (function << 8) | (offset & 0xFFFC) | 0x80000000);
+  x86OutputDouble(0xCFC, value);
 }
