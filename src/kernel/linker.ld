@@ -19,3 +19,6 @@ laihost_outw = x86OutputWide;
 laihost_inw = x86InputWide;
 laihost_outd = x86OutputDouble;
 laihost_ind = x86InputDouble;
+laihost_memset = memset;
+laihost_memcpy = memcpy;
+laihost_memcmp = memcmp;

@@ -3,4 +3,4 @@
 	url = https://gitlab.com/bztsrc/posix-uefi
 [submodule "lightweight-aml-interpreter"]
 	path = lightweight-aml-interpreter
-	url = https://github.com/managarm/lai
+	url = https://github.com/TheDarkBomber/lai-patched
