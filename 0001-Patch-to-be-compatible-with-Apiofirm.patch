@@ -1,0 +1,33 @@
+From b97b5f9ea6f7f602f7aecc80ecc6ec1d36d4cfe0 Mon Sep 17 00:00:00 2001
+From: TheDarkBomber <thedarkbomber80@gmail.com>
+Date: Tue, 27 Sep 2022 17:33:22 +0100
+Subject: [PATCH] Patch to be compatible with Apiofirm
+
+---
+ include/lai/internal-util.h | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/include/lai/internal-util.h b/include/lai/internal-util.h
+index a7b591d..11f54d7 100644
+--- a/include/lai/internal-util.h
++++ b/include/lai/internal-util.h
+@@ -16,10 +16,13 @@ size_t lai_strlen(const char *);
+ 
+ // Even in freestanding environments, GCC requires memcpy(), memmove(), memset()
+ // and memcmp() to be present. Thus, we just use them directly.
++#ifndef __APIOFIRM_MEMORY_H_
+ void *memcpy(void *, const void *, size_t);
+-void *memmove(void *, const void *, size_t);
+ void *memset(void *, int, size_t);
+ int memcmp(const void *, const void *, size_t);
++#endif
++
++void *memmove(void *, const void *, size_t);
+ 
+ //---------------------------------------------------------------------------------------
+ // Debugging and logging functions.
+
+base-commit: add10fff42f44093be3f90c26a326a39c2f572de
+-- 
+2.37.3
+
