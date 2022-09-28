@@ -16,6 +16,7 @@
 #include "gpt.h"
 #include "fat.h"
 #include "disk.h"
+#include "serial.h"
 #include <lai/helpers/sci.h>
 #include <stddef.h>
 
@@ -33,6 +34,8 @@ void _start(BootInfo* boot) {
 	TextCTX.CursorY = 0;
 	TextCTX.Foreground = FG_BEE;
 	TextCTX.Background = BG_BEE;
+
+	InitialiseSerial();
 
 	ClearScreen(0);
 	strput("WELCOME TO APIOFIRM!\n");
@@ -58,10 +61,12 @@ void _start(BootInfo* boot) {
 	uint64_t KSize = (uint64_t)&_KEndLoc - (uint64_t)&_KStartLoc;
 
 	LockPages((char*)&_KStartLoc, U64CeilingDivision(KSize, 4096));
-	printf("Total RAM: 0x%x KB\n", PageCTX.TotalMemorySize);
-	printf("Free RAM: 0x%x KB\n", PageCTX.FreeMemorySize);
-	printf("Used RAM: 0x%x KB\n", PageCTX.UsedMemorySize);
-	printf("Reserved RAM: 0x%x KB\n", PageCTX.ReservedMemorySize);
+	prints("\x1B[32m");
+	prints("Total RAM: 0x%x KB\n", PageCTX.TotalMemorySize);
+	prints("Free RAM: 0x%x KB\n", PageCTX.FreeMemorySize);
+	prints("Used RAM: 0x%x KB\n", PageCTX.UsedMemorySize);
+	prints("Reserved RAM: 0x%x KB\n", PageCTX.ReservedMemorySize);
+	prints("\x1B[0m");
 
 	LockPages((char*)boot->GFX.FrameBuffer, U64CeilingDivision((uint64_t)boot->GFX.FrameBuffer + boot->GFX.Pitch * boot->GFX.Height * 4 + 0x1000, 4096));
 
@@ -92,11 +97,12 @@ void _start(BootInfo* boot) {
 
 	MCFGHeader* MCFG = (MCFGHeader*)ACPIFindTable(XSDT, "MCFG");
 	if (MCFG) {
-		printf("Found MCFG at 0x%x\n", MCFG);
+		prints("\x1B[34m[ACPI] Found MCFG at 0x%x\n\x1B[0m", MCFG);
 		InitialisePCI(MCFG);
 	} else {
 		TextCTX.Foreground = SOFTRED;
 		printf("WARNING: Failed to find MCFG in ACPI tables. Without this, PCI functionality will not be available.\n");
+		prints("\x1B[1;31m[ACPI] Failed to find MCFG. PCI functionality disabled.\n\x1B[0m");
 		TextCTX.Foreground = FG_BEE;
 	}
 

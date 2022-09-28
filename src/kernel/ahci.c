@@ -21,15 +21,15 @@ AHCIDriver* InitialiseAHCIDriver(PCIDevice* device) {
 	driver->ABAR = (AHCIMemoryHBA*)(uintptr_t)((PCIHeader0*)device)->BAR5;
 	MapMemoryV2P((char*)driver->ABAR, (char*)driver->ABAR);
 	AHCIClearInterrupts(driver);
-	printf("[GHC] 0b%b\n", driver->ABAR->GlobalHostControl);
+	/* printf("[GHC] 0b%b\n", driver->ABAR->GlobalHostControl); */
 	driver->ABAR->GlobalHostControl |= (1 << 1); // Enable interrupts
-	printf("[GHC] 0b%b\n", driver->ABAR->GlobalHostControl);
-	printf("[AHCI] Initialised AHCI driver 0x%X\n", driver->PCIBase);
+	/* printf("[GHC] 0b%b\n", driver->ABAR->GlobalHostControl); */
+	prints("\x1B[1;32m[AHCI] Initialised AHCI driver 0x%X\n\x1B[0m", driver->PCIBase);
 	ProbeAHCIPorts(driver);
 
 	for (int i = 0; i < driver->PortAmount; i++) {
 		ConfigureAHCIPort(driver->Ports[i]);
-		printf("[AHCI] Configured port %u of type %s\n", driver->Ports[i]->Number, AHCIPortTypeStrings[driver->Ports[i]->Type]);
+		prints("\x1B[34m[AHCI] Configured port %u of type %s\n\x1B[0m", driver->Ports[i]->Number, AHCIPortTypeStrings[driver->Ports[i]->Type]);
 
 		driver->Ports[i]->Buffer = RequestPages(16);
 		driver->Ports[i]->PagesAllocated = 16;
@@ -53,7 +53,7 @@ void ProbeAHCIPorts(AHCIDriver* driver) {
 	for (int i = 0; i < 32; i++) {
 		if (driver->ABAR->ImplementedPorts & (1 << i)) {
 			AHCIPortType type = AHCICheckPortType(&driver->ABAR->Ports[i]);
-			printf("[AHCI] Detected %s port.\n", AHCIPortTypeStrings[type]);
+			prints("\x1B[3;34m[AHCI] Detected %s port.\n\x1B[0m", AHCIPortTypeStrings[type]);
 			if (type == AHCISATAPort || type == AHCISATAPIPort) {
 				temporaryPortStore[driver->PortAmount] = (AHCIPort*)mallocate(sizeof(AHCIPort));
 				temporaryPortStore[driver->PortAmount]->Type = type;

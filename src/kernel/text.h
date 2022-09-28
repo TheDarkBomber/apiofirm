@@ -12,6 +12,9 @@ typedef struct {
 	uint32_t Background;
 } TextContext;
 
+typedef void (*CharacterOut)(char c);
+typedef void (*StringOut)(char* s);
+
 inline void plotPixel(VideoOut *gfx, int x, int y, unsigned long pixel) {
   *((uint32_t *)(gfx->FrameBuffer + (gfx->Pitch * y) + x)) = pixel;
 }
@@ -26,9 +29,12 @@ inline void plotBlock(VideoOut *gfx, int x, int y, uint32_t blockSize, uint32_t 
 
 void ClearScreen();
 void charput(char c);
-void strput(const char* s);
-void printf(const char *fmt, ...);
-void printfv(const char* fmt, va_list arguments);
+void strput(char* s);
+void printf(const char* format, ...);
+void printfv(const char* format, va_list arguments);
+void prints(const char* format, ...);
+void printsv(const char* format, va_list arguments);
+void printvc(const char* format, va_list arguments, CharacterOut cout, StringOut sout);
 void SetCursor(int x, int y);
 
 extern TextContext TextCTX;

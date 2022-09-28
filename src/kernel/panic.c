@@ -3,6 +3,7 @@
 #include "colours.h"
 
 void GenericKernelPanic(const char* format, char* error, ...) {
+	prints("\x1B[1;31m***FATAL ERROR***\n\x1B[0m");
 	va_list arguments;
 	va_start(arguments, error);
 

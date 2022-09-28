@@ -15,7 +15,7 @@ static void PCI_InitialiseFunction(uint64_t device, uint64_t function) {
 	PCIDevice* pciDevice = (PCIDevice*)addr;
 
 	if (pciDevice->DeviceID == 0 || pciDevice->DeviceID == 0xFFFF) return;
-	printf("[PCI] 0x%x: Vendor=0x%x Device=0x%x\n", addr, pciDevice->VendorID, pciDevice->DeviceID);
+	prints("\x1B[35m[PCI] Discovered device 0x%x: Vendor=0x%x Device=0x%x\n\x1B[0m", addr, pciDevice->VendorID, pciDevice->DeviceID);
 
 	uint32_t deviceType = (pciDevice->Class << 16) | (pciDevice->Subclass << 8) | pciDevice->ProgramInterface;
 	switch (deviceType) {

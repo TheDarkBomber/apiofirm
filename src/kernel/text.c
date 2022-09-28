@@ -1,5 +1,6 @@
 #include "text.h"
 #include "memory.h"
+#include "serial.h"
 #include <stdarg.h>
 #include <stdbool.h>
 
@@ -85,7 +86,7 @@ void charput(char c) {
 	if (TextCTX.CursorY * TextCTX.TFX->Height >= TextCTX.GFX->Height) scroll(1);
 }
 
-void strput(const char* s) {
+void strput(char* s) {
 	while (*s) {
 		charput(*s);
 		s++;
@@ -103,7 +104,7 @@ void ClearScreen(int fromY) {
 const char HEXADECIMAL_CHARACTERS[] = "0123456789ABCDEF";
 const char NIFTIMAL_CHARACTERS[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-void usiprint(uint64_t number, int radix) {
+void usiprint(uint64_t number, int radix, CharacterOut cout) {
 	char buffer[32];
 	int position = 0;
 
@@ -113,14 +114,14 @@ void usiprint(uint64_t number, int radix) {
 		buffer[position++] = NIFTIMAL_CHARACTERS[remainder];
 	} while (number > 0);
 
-	while (--position >= 0) charput(buffer[position]);
+	while (--position >= 0) cout(buffer[position]);
 }
 
-void siprint(int64_t number, int radix) {
+void siprint(int64_t number, int radix, CharacterOut cout) {
 	if (number < 0) {
 		charput('-');
-		usiprint(-number, radix);
-	} else usiprint(number, radix);
+		usiprint(-number, radix, cout);
+	} else usiprint(number, radix, cout);
 }
 
 #define PRINT_NORMAL_STATE 0
@@ -138,11 +139,26 @@ void siprint(int64_t number, int radix) {
 void printf(const char* format, ...) {
 	va_list arguments;
 	va_start(arguments, format);
-	printfv(format, arguments);
+	printvc(format, arguments, charput, strput);
 	va_end(arguments);
 }
 
 void printfv(const char* format, va_list arguments) {
+	printvc(format, arguments, charput, strput);
+}
+
+void prints(const char* format, ...) {
+	va_list arguments;
+	va_start(arguments, format);
+	printvc(format, arguments, SerialWrite, SerialWriteString);
+	va_end(arguments);
+}
+
+void printsv(const char* format, va_list arguments) {
+	printvc(format, arguments, SerialWrite, SerialWriteString);
+}
+
+void printvc(const char* format, va_list arguments, CharacterOut cout, StringOut sout) {
 	int state = PRINT_NORMAL_STATE;
 	int length = PRINT_DEFAULT_LENGTH;
 	int radix = 10;
@@ -158,7 +174,7 @@ void printfv(const char* format, va_list arguments) {
 				state = PRINT_LENGTH_STATE;
 				break;
 			default:
-				charput(*format);
+				cout(*format);
 				break;
 			}
 			break;
@@ -195,20 +211,20 @@ void printfv(const char* format, va_list arguments) {
 		PRINT_SPECIFIER_STATE_:
 			switch(*format) {
 			case 'c':
-				charput((char)va_arg(arguments, int));
+				cout((char)va_arg(arguments, int));
 				break;
 			case 's':
-				strput(va_arg(arguments, const char*));
+				sout(va_arg(arguments, char*));
 				break;
 			case '#': // Print UTF-16 LE string as an ASCII string.
 				strbuffer = va_arg(arguments, char*);
 				while (*strbuffer || *(strbuffer + 1)) {
-					charput(*strbuffer);
+					cout(*strbuffer);
 					strbuffer += 2;
 				}
 				break;
 			case '%':
-				charput('%');
+				cout('%');
 				break;
 			case 'd':
 			case 'i':
@@ -257,15 +273,15 @@ void printfv(const char* format, va_list arguments) {
 					case PRINT_SSHORT_LENGTH:
 					case PRINT_SHORT_LENGTH:
 					case PRINT_DEFAULT_LENGTH:
-						siprint(va_arg(arguments, int), radix);
+						siprint(va_arg(arguments, int), radix, cout);
 						break;
 
 					case PRINT_LONG_LENGTH:
-						siprint(va_arg(arguments, long), radix);
+						siprint(va_arg(arguments, long), radix, cout);
 						break;
 
 					case PRINT_LLONG_LENGTH:
-						siprint(va_arg(arguments, long long), radix);
+						siprint(va_arg(arguments, long long), radix, cout);
 						break;
 					}
 				} else {
@@ -273,15 +289,15 @@ void printfv(const char* format, va_list arguments) {
 					case PRINT_SSHORT_LENGTH:
 					case PRINT_SHORT_LENGTH:
 					case PRINT_DEFAULT_LENGTH:
-						usiprint(va_arg(arguments, unsigned int), radix);
+						usiprint(va_arg(arguments, unsigned int), radix, cout);
 						break;
 
 					case PRINT_LONG_LENGTH:
-						usiprint(va_arg(arguments, unsigned long), radix);
+						usiprint(va_arg(arguments, unsigned long), radix, cout);
 						break;
 
 					case PRINT_LLONG_LENGTH:
-						usiprint(va_arg(arguments, unsigned long long), radix);
+						usiprint(va_arg(arguments, unsigned long long), radix, cout);
 						break;
 					}
 				}

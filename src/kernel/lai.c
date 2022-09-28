@@ -8,7 +8,16 @@
 #include <acpispec/tables.h>
 
 void laihost_log(int level, const char* msg) {
-	printf("%u: %s\n", level, msg);
+	switch (level) {
+	case LAI_DEBUG_LOG:
+		prints("\x1B[36m[LAI DEBUG] %s\n\x1B[0m");
+		return;
+	case LAI_WARN_LOG:
+		prints("\x1B[1;33m[LAI WARN] \x1B[33m%s\n\x1B[0m");
+		return;
+	default:
+		prints("[LAI] %s\n");
+	}
 }
 
 __attribute__((noreturn)) void laihost_panic(const char* msg) {
