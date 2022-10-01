@@ -1,6 +1,6 @@
 #ifndef __APIOFIRM_PCI_H_
 #define __APIOFIRM_PCI_H_
-#include "acpi.h"
+#include <acpi/acpi.h>
 
 typedef enum {
 	PCINullDriver = 0,

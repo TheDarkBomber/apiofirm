@@ -1,9 +1,9 @@
-#include "isr.h"
-#include "panic.h"
-#include "text.h"
-#include "keyboard.h"
-#include "pit.h"
-#include "power.h"
+#include <int/isr.h>
+#include <panic.h>
+#include <hci/text.h>
+#include <int/keyboard.h>
+#include <int/pit.h>
+#include <acpi/power.h>
 
 char* ISR_Strings[0x20] = {
 	"Divide by Zero",

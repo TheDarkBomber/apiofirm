@@ -1,7 +1,7 @@
-#include "fat.h"
-#include "memory.h"
-#include "text.h"
-#include "string.h"
+#include <disk/fat.h>
+#include <memory.h>
+#include <hci/text.h>
+#include <string.h>
 #include <stddef.h>
 
 uint64_t FAT32ClusterToLBA(FAT32Driver* driver, uint32_t cluster) {
@@ -185,7 +185,7 @@ uint32_t FAT32Open(FAT32Driver* driver, char* path) {
 		char* delimiter = strchr(path, '/');
 		if (delimiter) {
 			memcpy(name, path, delimiter - path);
-			name[delimiter - path + 1] = '\0';
+			name[delimiter - path] = '\0';
 			path = delimiter + 1;
 		} else {
 			uint64_t length = strlen(path);

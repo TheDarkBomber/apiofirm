@@ -1,4 +1,4 @@
-#include "gdt.h"
+#include <x86/gdt.h>
 
 GDTStructure GDT = {
 	{0, 0, 0, 0x00, 0x00, 0},

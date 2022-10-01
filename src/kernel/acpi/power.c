@@ -1,7 +1,7 @@
-#include "power.h"
-#include "panic.h"
-#include "idt.h"
-#include "memory.h"
+#include <acpi/power.h>
+#include <panic.h>
+#include <int/idt.h>
+#include <memory.h>
 #include <lai/helpers/pm.h>
 
 void PowerOff() {

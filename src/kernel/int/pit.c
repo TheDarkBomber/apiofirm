@@ -1,6 +1,6 @@
-#include "pit.h"
-#include "pic.h"
-#include "x86.h"
+#include <int/pit.h>
+#include <int/pic.h>
+#include <x86/x86.h>
 
 static uint64_t sleepclock = 0;
 

@@ -1,5 +1,5 @@
-#include "serial.h"
-#include "x86.h"
+#include <hci/serial.h>
+#include <x86/x86.h>
 
 bool InitialiseSerial() {
 	x86Output(COM1Port + 1, 0x00);

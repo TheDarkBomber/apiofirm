@@ -1,6 +1,6 @@
-#include "pic.h"
-#include "x86.h"
-#include "kattrs.h"
+#include <int/pic.h>
+#include <x86/x86.h>
+#include <kattrs.h>
 
 #define IO_WAIT 0x80
 

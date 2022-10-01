@@ -1,7 +1,7 @@
 #ifndef __APIOFIRM_AHCI_H_
 #define __APIOFIRM_AHCI_H_
-#include "pci.h"
-#include "disk.h"
+#include <pci/pci.h>
+#include <disk/disk.h>
 #include <stdint.h>
 #include <stdbool.h>
 

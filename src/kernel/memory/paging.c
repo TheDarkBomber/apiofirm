@@ -1,7 +1,7 @@
-#include "paging.h"
-#include "memory.h"
-#include "maths.h"
-#include "panic.h"
+#include <memory/paging.h>
+#include <memory.h>
+#include <maths.h>
+#include <panic.h>
 #include <stddef.h>
 
 PageFrameAllocatorContext PageCTX;

@@ -1,6 +1,6 @@
 #ifndef __APIOFIRM_FAT32_H_
 #define __APIOFIRM_FAT32_H_
-#include "disk.h"
+#include <disk/disk.h>
 #include <stdint.h>
 #include <stdbool.h>
 

@@ -1,5 +1,5 @@
-#include "acpi.h"
-#include "memory.h"
+#include <acpi/acpi.h>
+#include <memory.h>
 #include <stddef.h>
 
 static uintptr_t ACPI_XSDT;

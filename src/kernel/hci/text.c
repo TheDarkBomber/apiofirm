@@ -1,6 +1,6 @@
-#include "text.h"
-#include "memory.h"
-#include "serial.h"
+#include <hci/text.h>
+#include <memory.h>
+#include <hci/serial.h>
 #include <stdarg.h>
 #include <stdbool.h>
 

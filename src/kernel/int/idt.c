@@ -1,5 +1,5 @@
-#include "idt.h"
-#include "memory.h"
+#include <int/idt.h>
+#include <memory.h>
 
 extern void* ISRStubTable[];
 

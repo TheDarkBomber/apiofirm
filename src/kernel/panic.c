@@ -1,6 +1,6 @@
-#include "panic.h"
-#include "text.h"
-#include "colours.h"
+#include <panic.h>
+#include <hci/text.h>
+#include <colours.h>
 
 void GenericKernelPanic(const char* format, char* error, ...) {
 	prints("\x1B[1;31m***FATAL ERROR***\n\x1B[0m");

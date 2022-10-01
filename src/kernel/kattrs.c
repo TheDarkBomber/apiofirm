@@ -1,5 +1,5 @@
-#include "kattrs.h"
-#include "pic.h"
+#include <kattrs.h>
+#include <int/pic.h>
 
 KernelAttributes ApiofirmCTX;
 

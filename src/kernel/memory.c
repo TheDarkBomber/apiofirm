@@ -1,6 +1,6 @@
-#include "memory.h"
-#include "heap.h"
-#include "maths.h"
+#include <memory.h>
+#include <memory/heap.h>
+#include <maths.h>
 #include <stddef.h>
 
 char* memcpy(char* destination, char* src, uint64_t size) {

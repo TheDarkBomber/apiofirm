@@ -1,9 +1,9 @@
-#include "ahci.h"
-#include "disk.h"
-#include "memory.h"
-#include "paging.h"
-#include "text.h"
-#include "kattrs.h"
+#include <pci/ahci.h>
+#include <disk/disk.h>
+#include <memory.h>
+#include <memory/paging.h>
+#include <hci/text.h>
+#include <kattrs.h>
 
 const char* AHCIPortTypeStrings[] = {
 	"Null",

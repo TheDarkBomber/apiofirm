@@ -1,6 +1,6 @@
 #ifndef __APIOFIRM_TEXT_H_
 #define __APIOFIRM_TEXT_H_
-#include "com.h"
+#include <com.h>
 #include <stdarg.h>
 
 typedef struct {

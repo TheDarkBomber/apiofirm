@@ -1,8 +1,8 @@
-#include "keyboard.h"
-#include "power.h"
-#include "text.h"
-#include "pic.h"
-#include "x86.h"
+#include <int/keyboard.h>
+#include <acpi/power.h>
+#include <hci/text.h>
+#include <int/pic.h>
+#include <x86/x86.h>
 #include <stdbool.h>
 
 static char NormalKeymap[256];

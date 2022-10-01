@@ -1,6 +1,6 @@
 #ifndef __APIOFIRM_DISK_H_
 #define __APIOFIRM_DISK_H_
-#include "gpt.h"
+#include <disk/gpt.h>
 #include <stdbool.h>
 
 typedef bool (*DiskAPI_ReadSector)(void* driver, uint64_t LBA, char* data);

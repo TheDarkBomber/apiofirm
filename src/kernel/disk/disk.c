@@ -1,6 +1,6 @@
-#include "disk.h"
-#include "memory.h"
-#include "panic.h"
+#include <disk/disk.h>
+#include <memory.h>
+#include <panic.h>
 
 Disk* DiskRegistry;
 uint64_t DiskRegistryLength;

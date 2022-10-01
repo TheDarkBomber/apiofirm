@@ -1,4 +1,4 @@
-#include "string.h"
+#include <string.h>
 #include <stddef.h>
 
 char* strchr(char* str, char chr) {

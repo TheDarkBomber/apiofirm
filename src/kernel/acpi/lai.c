@@ -1,9 +1,9 @@
-#include "text.h"
-#include "panic.h"
-#include "memory.h"
-#include "acpi.h"
-#include "paging.h"
-#include "pci.h"
+#include <hci/text.h>
+#include <panic.h>
+#include <memory.h>
+#include <acpi/acpi.h>
+#include <memory/paging.h>
+#include <pci/pci.h>
 #include <lai/host.h>
 #include <acpispec/tables.h>
 

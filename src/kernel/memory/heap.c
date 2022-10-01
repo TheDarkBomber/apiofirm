@@ -1,6 +1,6 @@
-#include "heap.h"
-#include "paging.h"
-#include "maths.h"
+#include <memory/heap.h>
+#include <memory/paging.h>
+#include <maths.h>
 #include <stddef.h>
 
 Heap HeapCTX;

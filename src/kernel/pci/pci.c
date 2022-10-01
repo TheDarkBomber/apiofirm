@@ -1,10 +1,10 @@
-#include "pci.h"
-#include "paging.h"
-#include "text.h"
-#include "panic.h"
-#include "ahci.h"
-#include "memory.h"
-#include "x86.h"
+#include <pci/pci.h>
+#include <memory/paging.h>
+#include <hci/text.h>
+#include <panic.h>
+#include <pci/ahci.h>
+#include <memory.h>
+#include <x86/x86.h>
 
 PCIRegister* PCIRegistry = (void*)0;
 uint64_t PCIRegistryLength = 0;
